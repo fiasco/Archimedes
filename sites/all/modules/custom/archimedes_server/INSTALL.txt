@@ -1,0 +1,21 @@
+-- REQUIREMENTS --
+
+* The python-webkit2png library.
+
+
+-- INSTALLATION --
+
+* Copy the archimedes server module directory to your sites/all/modules directory, so it
+  is located in sites/all/modules/archimedes_server.
+
+* Download the python-webkit2png release from:
+
+  https://github.com/AdamN/python-webkit2png/tarball/master
+
+* Put the downloaded archive into the module directory:
+
+    /sites/all/modules/archimedes_server/AdamN-python-webkit2png-4e625af.tar.gz
+
+* Extract the archive to python-webkit2png.  This will create the following sub-directory:
+
+    /sites/all/modules/archimedes_server/python-webkit2png/

@@ -1,0 +1,33 @@
+<?php
+
+include_once('archimedes_activity_stream.features.inc');
+
+/**
+ * API function to add an action to a site.
+ */
+function archimedes_activity_stream_add($site_nid, $title, $body, $author_uid, $created = FALSE, $tags = array()) {
+
+  if (!is_array($site_nid) && !is_numeric($site_nid)) {
+    return FALSE;
+  }
+
+  if (!is_array($site_nid)) {
+    $site_nid = array($site_nid);
+  }
+
+  $node = (object) array(
+    'type' => 'action',
+    'title' => $title,
+    'body' => $body,
+    'uid' => $author_uid,
+    'created' => $created ? $created : time(),
+    'status' => 1,
+    'taxonomy' => array('tags' => array(3 => implode(' ', $tags))),
+  );
+
+  foreach ($site_nid as $idx => $nid) {
+    $node->field_site_ref[$idx]['nid'] = $nid;
+  }
+
+  return node_save($node);
+}

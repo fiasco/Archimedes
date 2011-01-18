@@ -1,0 +1,479 @@
+<?php
+
+require dirname(__FILE__) . '/archimedes_server.features.inc';
+
+/**
+ * Implementation of hook_perm().
+ */
+function archimedes_server_perm() {
+  return array('administer monitored site');
+}
+
+/**
+* Implementation of hook_menu().
+*/
+function archimedes_server_menu() {
+  $items = array();
+  $items['admin/archimedes'] = array(
+    'title' => t('Archimedes'),
+    'access arguments' => array('access administration pages'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('archimedes_server_admin'),
+    'description' => t('Administer Archimedes Server'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['archimedes-server/verify-user'] = array(
+    'access arguments' => array('administer monitored site'),
+    'type' => MENU_CALLBACK,
+    'page callback' => 'archimedes_server_verify_user',
+  );
+  return $items;
+} // archimedes_server_menu()
+
+
+function archimedes_server_admin() {
+  $mail = variable_get('archimedes_mail', '');
+  $keys = variable_get('archimedes_keys', '');
+  $form = array();
+  $form['archimedes_mail'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('POP Mail Settings'),
+    '#tree' => TRUE,
+  );
+  $form['archimedes_mail']['mail_server'] = array(
+    '#type' => 'textfield',
+    '#title' => t('POP Mail Server'),
+    '#default_value' => $mail['mail_server'],
+    '#description' => t('Set mail server for Archimedes to get update emails.'),
+  );
+  $form['archimedes_mail']['mail_port'] = array(
+    '#type' => 'textfield',
+    '#title' => t('POP Mail Port'),
+    '#size' => 5,
+    '#default_value' => ($mail['mail_port'] ? $mail['mail_port'] : '110'),
+    '#description' => t('Set mail server port.'),
+  );
+  $form['archimedes_mail']['mail_user'] = array(
+    '#type' => 'textfield',
+    '#title' => t('POP Mail Username'),
+    '#default_value' => $mail['mail_user'],
+    '#description' => t('Set mail user for authentication.'),
+  );
+  $form['archimedes_mail']['mail_password'] = array(
+    '#type' => 'password',
+    '#title' => t('POP Mail Password'),
+    '#description' => t('Set mail pass for authentication. Warning: This is stored unencrypted in the database.'),
+  );
+  $form['archimedes_keys'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Encryption Keys'),
+    '#tree' => TRUE,
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+
+  );
+  $form['archimedes_keys']['private'] = array(
+    '#type' => 'item',
+    '#title' => t('Private Key'),
+    '#value' => '<pre>' . $keys['private'] . '</pre>',
+    '#description' => t('Archimedes Server private key. Keep this secure.'),
+  );
+  $form['archimedes_keys']['public'] = array(
+    '#type' => 'item',
+    '#title' => t('Public Key'),
+    '#value' => '<pre>' . $keys['public'] . '</pre>',
+    '#description' => t('Archimedes Server public key. Copy this to the admin page for each Archimedes client to send encrypted emails.'),
+  );
+
+  $form['#submit'] = array('archimedes_server_admin_submit');
+
+  return system_settings_form($form);
+} // archimedes_server_admin()
+
+function archimedes_server_admin_submit($form, &$form_state) {
+  // ensure password is kept when left blank.
+  if ($form_state['values']['archimedes_mail']['mail_password'] == '') {
+    $mail = variable_get('archimedes_mail', array());
+    $form_state['values']['archimedes_mail']['mail_password'] = $mail['mail_password'];
+  }
+} // archimedes_server_admin()
+
+/**
+ * Reads the configured inbox and builds array of attached XML
+ */
+function archimedes_server_get_xml(){
+  $mail = variable_get('archimedes_mail', array());
+  $mailbox = '{' . $mail['mail_server'] . ':' . $mail['mail_port'] . '/pop3/notls}INBOX'; // add more flexibility for other email box types
+  $mbox = imap_open(imap_utf7_encode($mailbox),$mail['mail_user'],$mail['mail_password']);
+  $data = array();
+  for($i = 1; $i <= imap_num_msg($mbox); $i++) {
+    $struct = imap_fetchstructure($mbox, $i);
+    $keys = variable_get('archimedes_keys','');
+    $pkey = $keys['private'];
+    $id = 1;
+    $xml = '';
+    $ekey = '';
+    $crypt = FALSE;
+    foreach($struct->parts as $section) {
+      $sect = imap_fetchbody($mbox,$i,$id);
+
+      if ($section->encoding == 3)     // 3 = BASE64
+        $sect = base64_decode($sect);
+      elseif ($section->encoding == 4) // 4 = QUOTED-PRINTABLE
+        $sect = quoted_printable_decode($sect);
+
+      if ($section->subtype == 'XML' && $section->disposition == 'ATTACHMENT') {
+        $xml = $sect;
+      } elseif (substr($sect,0,5) == 'EKEY:') {
+        $crypt = TRUE;
+        $ekey = substr($sect,6);
+      }
+      $id++;
+    }
+    imap_delete($mbox, $i);
+
+    if ($crypt) {
+      $prikey = openssl_pkey_get_private($pkey);
+      openssl_open($xml,$uncrypt,$ekey, $prikey);
+      openssl_free_key($prikey);
+      $xml = $uncrypt;
+    }
+    $data[] = $xml;
+  }
+  imap_expunge($mbox); //uncomment to delete from mailbox. Leave commented during testing
+  imap_close($mbox);
+
+  return $data;
+}
+
+/**
+* Implementation of hook_cron().
+*/
+function archimedes_server_cron() {
+  archimedes_server_update();
+}
+
+
+/**
+* Update all nodes from inbox
+*/
+function archimedes_server_update() {
+  module_load_include('inc', 'archimedes_server');
+  $data = archimedes_server_get_xml();
+  if (empty($data)) {
+    return;
+  }
+  date_default_timezone_set('UTC');
+  foreach($data as $xml) {
+    // create blank node object
+    $node = new stdClass();
+
+    $dom = new DOMDocument();
+    $dom->loadXML($xml);
+
+    // fail if $dom->documentElement not set
+    if (!isset($dom->documentElement)) {
+      continue;
+    }
+
+    // Get unique identifier and check if in system
+    $id = $dom->documentElement->getAttribute('id');
+    $type = $dom->documentElement->getAttribute('type');
+    $author = $dom->documentElement->getAttribute('author');
+    $datetime = $dom->documentElement->getAttribute('datetime');
+
+    // ignore if content type does not exist
+    if (!$node_type = content_types($type)) {
+      continue;
+    }
+
+    // The user may not yet exist so create the user
+    // but do not activate the user.
+    $uid = archimedes_server_user_save($author);
+
+    if ($nid = db_result(db_query(sprintf("SELECT {content_type_%s}.nid FROM {content_type_%s} LEFT JOIN {content_field_unique_hash} ON {content_type_%s}.vid={content_field_unique_hash}.vid WHERE field_unique_hash_value = '%s' LIMIT 1", $type, $type, $type, $id)))) {
+      $node = node_load(array('nid' => $nid));
+      $node->revision = TRUE;
+    }
+    else {
+      $node->type = $node_type['type'];
+      $node->created = time();
+      $node->status = 1; //published
+      $node->promote = 0;
+      $node->sticky = 0;
+      $node->uid = $uid;
+      $node->comment = variable_get('comment_' . $type, 2);
+      $node->field_unique_hash = array(0 => array('value' => $id));
+    }
+
+    // Attempt to parse the XML into a node. Any failure to parse
+    // will throw an exception in which case we will not try to
+    // save the node.
+    try {
+      foreach($dom->getElementsByTagName('field') as $item) {
+        $fid = $item->getAttribute('id');
+        // non cck fields
+        if ($fid == 'title' || $fid == 'body') {
+          $node->{$fid} = trim($item->nodeValue);
+          continue;
+        }
+
+        // If content type has no record of field id
+        // then do not attempt to save it.
+        if (!$field = $node_type['fields'][$fid]) {
+          continue;
+        }
+
+        $values = array();
+        foreach ($item->getElementsByTagName('value') as $value) {
+          // Check for plugins being used.
+          $plugins = array();
+          foreach ($value->attributes as $v) {
+            $plugins[$v->namespaceURI] = strtr($v->namespaceURI, array('monitor-plugin:' => ''));
+          }
+          $values[] = archimedes_server_run_plugins($plugins, $field, $value);
+        }
+
+        //attach values to node field
+        $node->{$fid} = $values;
+      }
+
+      // collect screenshot of website if not already saved.
+      if (archimedes_server_check_webkit() && !isset($node->field_thumbnail[0]) && isset($node->field_servername[0]['url'])) {
+        try {
+          $filename = preg_replace("/[^a-zA-Z0-9]/", "", $node->title) . '.png';
+          $filepath = file_directory_temp() . '/' . $filename;
+          $files_directory = archimedes_find_root() . '/' . file_directory_path();
+          $cmd = "python " . dirname(__FILE__) . "/python-webkit2png/webkit2png.py --log=" . $files_directory . "/webkit2png.log -x 1024 768 -g 1024 768 -o $filepath -w 1 %s";
+          archimedes_server_shell_exec($cmd, $node->field_servername[0]['url']);
+          if (!file_exists($filepath)) {
+            watchdog("Archimedes", "Server failed to take screenshot of site %url", array("%url" => $node->field_servername[0]['url']), WATCHDOG_ERROR);
+            // Exit early.
+            throw new Exception();
+          }
+
+          $max_width = 800;
+          $max_height = 600;
+
+          if (module_exists('imageapi') && imageapi_default_toolkit()) {
+            $res = imageapi_image_open($filepath);
+            imageapi_image_scale($res, $max_width, $max_height);
+            imageapi_image_close($res);
+          }
+          // Try to resize the image to fit the dimensions.
+          elseif (image_get_toolkit()) {
+            image_scale($filepath, $filepath, $max_width, $max_height);
+          }
+
+          $field = field_file_save_file($filepath, array(),file_directory_path().'/thumbs');
+
+          // Generate imagecache thumbnail
+          $presetname = 'SiteThumb';
+          if ($preset = imagecache_preset_by_name($presetname)) {
+            $dst = imagecache_create_path($presetname, $field['filepath']);
+            if (!file_exists($dst)) {
+              imagecache_build_derivative($preset['actions'], $field['filepath'], $dst);
+            }
+          }
+
+          $node->field_thumbnail = array(0 => $field);
+        }
+        catch (Exception $e) {}
+      }
+
+      // Record the time of report import.
+      $update = explode('+', date('c',strtotime($datetime))); // convert back to UTC timezone
+      $node->field_last_update = array(0 => array('value' => $update[0]));
+
+      // save now so hooks have access to the nid if needed
+      node_save($node);
+      $node->revision = FALSE;
+
+      // allow other modules to modify node before final save
+      drupal_alter('archimedes_site', $node);
+
+      // save node after hooks
+      node_save($node);
+
+    }
+    catch (Exception $e) {
+      watchdog('Archimedes', "Cannot import report into node: %reason", array("%reason" => $e->getMessage()), WATCHDOG_ERROR);
+    }
+  }
+}
+
+function archimedes_server_check_webkit(){
+  return is_dir(dirname(__FILE__) . '/python-webkit2png');
+}
+
+function archimedes_find_root() {
+  if (!empty($_SERVER['DOCUMENT_ROOT'])) {
+    $root = $_SERVER['DOCUMENT_ROOT'];
+  }
+  elseif (defined('DRUPAL_ROOT')) {
+    $root = DRUPAL_ROOT;
+  }
+  else {
+    $root = substr(dirname(__FILE__), 0, strpos(dirname(__FILE__), drupal_get_path('module', 'archimedes')));
+  }
+
+  return $root;
+}
+
+/**
+ * Define archimedes default plugin list
+ */
+function archimedes_server_archimedes_server_plugins() {
+  return array(
+    'node', 'user', 'drupal-package',
+  );
+}
+
+
+function archimedes_server_shell_exec($cmd) {
+  $args = func_get_args();
+
+  //do not change the command itself, just the parameters.
+  for ($x = 1; $x < sizeof($args); $x++) {
+    $args[$x] = escapeshellarg($args[$x]);
+  }
+  $command = call_user_func_array('sprintf', $args);
+
+  return exec($command, $output, $result) ? $output : FALSE;
+} // archimedes_shell_exec()
+
+
+
+/**
+  * Implementation of hook_block().
+  * @param string $op one of "list", "view", "save" and "configure"
+  * @param integer $delta code to identify the block
+  * @param array $edit only for "save" operation
+  */
+function archimedes_server_block($op = 'list', $delta = 0, $edit = array()) {
+  if ($op == 'list') {
+    // Generate listing of blocks from this module, for the admin/block page
+    $block = array();
+    $block[0]['info'] = t('Storage Overview');
+    $block[1]['info'] = t('Administer Monitored Site');
+    return $block;
+  } elseif ($op == 'view') {
+
+    $content = '';
+    $subject = '';
+
+    switch($delta) {
+      case 0:
+        if(arg(0) == 'node' && is_numeric(arg(1)) && ! arg(2)) {
+          $node = node_load(arg(1));
+
+          // Storage overview graph
+          $size[0] = $node->field_db_size[0]['value'];
+          $size[1] = $node->field_sitesize[0]['value'];
+          $size[2] = $node->field_sitedata[0]['value'];
+
+          $canvas = charts_graphs_get_graph('google-charts');
+
+          $canvas->title = "Storage Overview";
+          $canvas->type = "pie";
+          $canvas->width = 600;
+          $canvas->height = 300;
+          $canvas->series = array(
+            'DB Size' => $size,
+            'Webroot Size' => array(1),
+            'Site Data Size' => array(1),
+          );
+          $canvas->x_labels = array(archimedes_server_format_bytes($size[0]), archimedes_server_format_bytes($size[1]), archimedes_server_format_bytes($size[2]));
+
+          // check if associated SLA exists and calculate free disk space
+          if ($sla = $node->field_sla[0]['nid']) {
+
+            $sla_node = node_load($sla);
+            $space = $sla_node->field_disk_space[0]['value'];
+            $fs = ($space*1048576) - array_sum($size);
+
+            // better check we aren't exceeding allowable disk space
+            if ($fs < 0) {
+              $fs = 0;
+              $canvas->title .= '|' . t('Exceeding allowable disk space by') . ' ' . archimedes_server_format_bytes(array_sum($size) - ($space*1048576));
+              $canvas->title_color = 'FF0000';
+            } else {
+               $canvas->series['Free Space'] = array(1);
+               $canvas->series['DB Size'][] = $fs;
+               $canvas->x_labels[] = archimedes_server_format_bytes($fs);
+            }
+          }
+
+          $subject = t('Storage Overview');
+          $content = $canvas->get_chart();
+        }
+        break;
+      case 1:
+        if (user_access('administer monitored site')) {
+          if(arg(0) == 'node' && is_numeric(arg(1)) && ! arg(2)) {
+            $node = node_load(arg(1));
+            $subject = "";
+            $url = $node->field_servername[0]['url'];
+            $hash = $node->field_unique_hash[0]['value'];
+            if (!empty($url) && !empty($hash)) {
+              global $user;
+              $time = time();
+              $query = array(
+                'h' => $_SERVER['SERVER_NAME'],
+                'w' => md5($user->name . $user->mail),
+                't' => $time,
+                'i' => md5($time . $hash),
+              );
+              $content = l(t("Administer Site &raquo;"), $url . '/archimedes/login', array('query' => $query, 'html' => TRUE));
+              $content = '<div class="archimedes-administer-site">' . $content . '</div>';
+            }
+          }
+        }
+      break;
+    }
+    // Generate our block content
+    $block['subject'] = $subject;
+    $block['content'] = $content;
+
+    return $block;
+  }
+
+} // function archimedes_server_block
+
+function archimedes_server_format_bytes($size) {
+    $units = array(' B', ' KB', ' MB', ' GB', ' TB');
+    for ($i = 0; $size >= 1024 && $i < 4; $i++) $size /= 1024;
+    return round($size, 2).$units[$i];
+}
+
+/**
+ * Verify a user has rights to administer a site.
+ */
+function archimedes_server_verify_user() {
+  $fail_token = md5(mt_rand('100', '1000') . time());
+
+  try {
+    if (!isset($_GET['ekey']) || !isset($_GET['data'])) {
+      throw new Exception($token);
+    }
+
+    $keys = variable_get('archimedes_keys',array());
+    $pkey = $keys['private'];
+
+    $prikey = openssl_pkey_get_private($pkey);
+    openssl_open($_GET['data'],$uncrypt,$_GET['ekey'], $prikey);
+    openssl_free_key($prikey);
+
+    if (!$query = unserialize($uncrypt)) {
+      throw new Exception($token);
+    }
+    if (!isset($query['token']) || !isset($query['redirect'])) {
+      throw new Exception($token);
+    }
+    $token = $query['token'];
+  }
+  catch (Exception $e) {
+    $token = $e->getMessage();
+  }
+  drupal_goto($query['redirect'], array('token' => $token));
+}
