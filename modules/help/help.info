@@ -1,0 +1,6 @@
+; $Id$
+name = Help
+description = Manages the display of online help.
+package = Core - optional
+version = VERSION
+core = 6.x

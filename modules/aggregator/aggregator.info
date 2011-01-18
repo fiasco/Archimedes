@@ -1,0 +1,6 @@
+; $Id$
+name = Aggregator
+description = "Aggregates syndicated content (RSS, RDF, and Atom feeds)."
+package = Core - optional
+version = VERSION
+core = 6.x
