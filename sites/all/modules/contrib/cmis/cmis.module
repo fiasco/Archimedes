@@ -1,0 +1,281 @@
+<?php
+// $Id: cmis.module,v 1.3.2.1.2.11 2010/03/08 20:30:24 cbalan Exp $
+
+/**
+ * Returns a CMIS repository properties, based on local configuration.
+ * 
+ * Config sample:
+ *  $conf['cmis_repositories'] = array(
+ *    'default' => array (
+ *      'label' => 'Local',
+ *      'url' => 'http://127.0.0.1:8080/alfresco/s/cmis',
+ *      'transport' => 'cmis_headerswing', 
+ *      'headerswing_headers' => array (
+ *        // headers copied from $_SERVER[] to CMIS repository curl call
+ *        'HTTP_HOST' => 'FRONTENT_HOST',
+ *        'HTTP_HOST' => 'FRONTENT_HOST_AGAIN',
+ *        'HTTP_USER' => 'FRONTENT_USER',
+ *        'PHP_AUTH_USER' => 'FRONTENT_USER'
+ *        'PHP_AUTH_DIGEST' => 'FRONTEND_AUTH'
+ *      )
+ *    ),
+ *    
+ *    'demo cmis alfresco' => array(
+ *      'label' => 'cmis.alfresco.com',
+ *      'user' => 'admin',
+ *      'password' => 'admin',
+ *      'url' => 'http://cmis.alfresco.com/s/cmis'
+ *    ),
+ *    
+ *    'demo cmis nuxeo' => array(
+ *      'label' => 'cmis.demo.nuxeo.org',
+ *      'user' => 'Administrator',
+ *      'password' => 'Administrator',
+ *      'url' => 'http://cmis.demo.nuxeo.org/nuxeo/site/cmis',
+ *      'repository_id' => '8006e8e1-2298-4764-998c-5800383ac88a'
+ *    )
+ *  );
+ * 
+ * Usage:
+ *   // get default CMIS repository info
+ *   $cmis_repo = cmis_get_repository();
+ *
+ *   // get CMIS repository info based on config alias
+ *   $cmis_repo = cmis_get_repository('demo cmis alfresco');
+ *
+ *   // get CMIS repository info based on repository id.
+ *   // INTERNAL USE ONLY!
+ *   $cmis_repo = cmis_get_repository('8006e8e1-22...');
+ *
+ *   // CMIS getRepositoryInfo result
+ *   print_r($cmis_repo->info)
+ *
+ *   // repository id
+ *   print $cmis_repo->repositoryId
+ *
+ *   // config settings
+ *   print_r($cmis_repo->settings)
+ * 
+ * @param $id_or_alias 
+ * @return stdClass
+ */
+function cmis_get_repository($id_or_alias = NULL) {
+  static $repositories_cache;
+  $cmis_repository = NULL;
+
+  if(empty($id_or_alias)) {
+    global $user;
+    $id_or_alias = isset($user->cmis_repository)?$user->cmis_repository:'default';
+  }
+  
+  // init repository cache
+  if (is_null($repositories_cache)) {
+    $repositories_cache = array();
+  }
+
+  // lookup repository in cache
+  if (array_key_exists($id_or_alias, $repositories_cache)) {
+    $cmis_repository = $repositories_cache[$id_or_alias];
+  }
+  else {
+    $config_cmis_repos = variable_get('cmis_repositories', array());
+    
+    if (array_key_exists($id_or_alias, $config_cmis_repos)) {
+      // setup temp repository details
+      $cmis_repository = new stdClass();      
+      $repositories_cache[$id_or_alias] = $cmis_repository;
+      
+      // setup settings
+      $cmis_repository->settings = $config_cmis_repos[$id_or_alias];
+      
+      // merge in defaults.
+      $cmis_repository->settings += array('transport' => 'cmis_common');
+      
+      // init cmis repository
+      $cmis_repository->info = cmisapi_getRepositoryInfo($id_or_alias);
+      $cmis_repository->repositoryId = $cmis_repository->info->repositoryInfo['cmis:repositoryId'];
+        
+      // save repo description in cache
+      $repositories_cache[$cmis_repository->repositoryId] = & $repositories_cache[$id_or_alias];
+    }
+    else {
+      throw new CMISException(t('Unable to lookup CMIS repository [@cmis_id_or_alias]',
+                                array('@cmis_id_or_alias' => $id_or_alias)));
+    }
+  }
+  
+  return $cmis_repository;
+}
+
+/**
+ * CMIS invoke service. This method should return a stdClass with
+ * the following form:
+ *      $return = new stdClass();
+ *      $return->code = 200; // HTTP return code
+ *      $return->body = 'data'; // result body
+ *      $return->content_type = 'text/html'; //result content type
+ *      $return->content_lenght = 200;
+ *
+ * @return stdClass
+ */
+function cmis_service($repositry_id, $url = '', $properties = array()) {
+  // merge in defaults
+  $properties += array(
+    'headers' => array(),
+    'method' => 'GET',
+    'data' => NULL,
+    'retry' => 3
+  );
+  
+  $cmis_repository = cmis_get_repository((string) $repositry_id);
+  $cmis_transport = $cmis_repository->settings['transport'];
+
+  // invoke hook_cmis_service()
+  if (module_exists($cmis_transport)) {
+    return module_invoke($cmis_transport, 'cmis_service', $url, $properties, $cmis_repository->settings);  
+  }
+  else {
+    throw new CMISException(t('Unable to lookup CMIS transport [@cmis_transport] for [@cmis_id_or_alias]',
+                              array('@cmis_id_or_alias' => $repositry_id,
+                                    '@cmis_transport' => $cmis_transport)));
+  }
+}
+
+/**
+ * Utility function that returns all known vendors
+ * 
+ * @return array
+ */
+function cmis_get_vendors() {
+  $vendors = array();
+  $info_array = module_invoke_all('cmis_info');
+  foreach ($info_array as $type => $info) {
+    $info['type'] = $type;
+    $vendors[$type] = $info;
+  }
+  return $vendors;
+}
+
+/**
+ * Utility function used to call a CMIS method, 
+ * using the CMIS vendor selected in config.  
+ *
+ * @return mixed
+ */
+function cmis_vendor_invoke() {
+  $vendor = variable_get('cmis_vendor', 'cmis_common');
+
+  $args = func_get_args();
+  $cmis_method = $args[0];
+
+  $vendors = cmis_get_vendors();
+  if (array_key_exists($vendor, $vendors)) {
+    if (function_exists($vendor .'_cmisapi_invoke')) {
+        return call_user_func_array($vendor .'_cmisapi_invoke', $args);
+    }
+    else {
+        unset($args[0]);
+        $function = $vendor .'_cmisapi_'. $cmis_method;
+        if (function_exists($function)) {
+          return call_user_func_array($function, $args);
+        }
+        throw new CMISException(t('@function not implemented by @vendor CMIS vendor', array('@function' => $function, '@vendor' => $vendor)));
+    }
+  }
+  throw new CMISException(t('Unknown CMIS vendor: @vendor', array('@vendor' => $vendor)));
+}
+
+/**
+ * Return permissions for the CMIS module.
+ * 
+ */
+function cmis_perm() {
+  $perms = array(
+    'administer cmis',
+    'access cmis',
+  );
+  return $perms;
+}
+
+/**
+ * CMIS Exception class.
+ *  
+ */
+class CMISException extends Exception {
+  
+}
+
+/**
+ * Utility for handling CMIS errors. 
+ * 
+ * @param $e Exception
+ */
+function cmis_error_handler($type, $e) {
+  watchdog($type, $e->getMessage(), NULL, WATCHDOG_ERROR);
+  drupal_set_message($e->getMessage(), 'error');
+}
+
+/**
+ * CMIS repository switcher block.
+ * 
+ */
+function cmis_block($op = 'list', $delta = 0, $edit = array()) {
+  if ($op == 'list') {
+    $block[0]['info'] = t('CMIS repository switcher');
+    return $block;
+  }
+  elseif ($op == 'view') {    
+    $block['subject'] = t('CMIS repositories');
+    $block['content'] = drupal_get_form('cmis_repository_switcher_form');
+    return $block;
+  }
+}
+
+/**
+ * Implementation of hook_boot()
+ * 
+ */
+function cmis_boot() {
+  if (isset($_SESSION['cmis_repository'])) {
+    global $user;
+    $user->cmis_repository = $_SESSION['cmis_repository'];
+  }
+}
+
+/**
+ * CMIS repository switcher form.
+ * 
+ */
+function cmis_repository_switcher_form(& $form_state) {
+  $repositories = array();
+  foreach(variable_get('cmis_repositories', array()) as $repository_name => $repository_info) {
+    $repositories[$repository_name] = array_key_exists('label', $repository_info)?$repository_info['label']:$repository_name;
+  }
+
+  $form = array();
+  $form['cmis_repository'] = array(
+    '#type' => 'select',
+    '#title' => t('CMIS repositories'),
+    '#default_value' => $_SESSION['cmis_repository'],
+    '#options' => $repositories 
+  );
+  
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('OK'), 
+  );
+
+  return $form;
+}
+
+/**
+ * CMIS repository switcher form submit.
+ *
+ */
+function cmis_repository_switcher_form_submit($form, & $form_state) {
+  // saving current CMIS repository
+  $_SESSION['cmis_repository'] = $form_state['values']['cmis_repository'];
+  
+  // redirect to the source page
+  $form_state['redirect'] = $_GET['q'];
+}

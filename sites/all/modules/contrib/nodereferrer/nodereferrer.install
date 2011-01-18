@@ -1,0 +1,35 @@
+<?php
+// $Id: nodereferrer.install,v 1.3.2.1 2009/09/22 11:15:35 andypost Exp $
+
+/**
+ * Implementation of hook_install().
+ */
+function nodereferrer_install() {
+  drupal_load('module', 'content');
+  content_notify('install', 'nodereferrer');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function nodereferrer_uninstall() {
+  drupal_load('module', 'content');
+  content_notify('uninstall', 'nodereferrer');
+}
+
+/**
+ * Implementation of hook_enable().
+ */
+function nodereferrer_enable() {
+  drupal_load('module', 'content');
+  content_notify('enable', 'nodereferrer');
+}
+
+/**
+ * Implementation of hook_install().
+ */
+function nodereferrer_disable() {
+  drupal_load('module', 'content');
+  content_notify('disable', 'nodereferrer');
+}
+

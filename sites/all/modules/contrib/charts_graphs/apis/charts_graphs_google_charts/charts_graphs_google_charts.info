@@ -1,0 +1,15 @@
+; $Id: charts_graphs_google_charts.info,v 1.1.2.1 2010/07/01 13:20:43 rsevero Exp $
+
+name = "Charts and Graphs: Google Charts"
+description = "Google Charts implementation for Charts and Graphs."
+dependencies[] = charts_graphs
+package = "Charts"
+core = 6.x
+php = 5.1
+
+; Information added by drupal.org packaging script on 2010-11-18
+version = "6.x-2.6"
+core = "6.x"
+project = "charts_graphs"
+datestamp = "1290046267"
+

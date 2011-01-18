@@ -1,0 +1,94 @@
+<?php
+// $Id: charts_graphs_bluff.install,v 1.1.2.2 2010/07/07 17:27:03 rsevero Exp $
+
+/**
+ * @file
+ *   Install file for Bluff submodule.
+ *
+ */
+
+/**
+ * Implementation of hook_requirements().
+ */
+function charts_graphs_bluff_requirements($phase) {
+  $requirements = array();
+
+  // Ensure translations don't break at install time.
+  $t = get_t();
+
+  if ($phase == 'runtime') {
+    $path = dirname(realpath((__FILE__))) . '/bluff/';
+    $installation_instructions_path = module_exists('advanced_help') ?
+      'help/charts_graphs/bluff' :
+      'http://drupal.org/node/681668';
+
+    $file = 'excanvas.js';
+    if (!file_exists($path . $file)) {
+      $requirements['charts_graphs_bluff_' . $file] = array(
+        'title' => $t('Bluff %file file', array('%file' => $file)),
+        'description' => $t('Bluff needs the %file file to work properly.
+          Please review Bluff !installation_instructions.',
+          array(
+            '%file' => $file,
+            '!installation_instructions' => l(t('installation instructions'), $installation_instructions_path))
+        ),
+        'severity' => REQUIREMENT_ERROR,
+        'value' => $t('Unavailable'),
+      );
+    }
+
+    $file = 'js-class.js';
+    if (!file_exists($path . $file)) {
+      $requirements['charts_graphs_bluff_' . $file] = array(
+        'title' => $t('Bluff %file file', array('%file' => $file)),
+        'description' => $t('Bluff needs the %file file to work properly.
+          Please review Bluff !installation_instructions.',
+          array(
+            '%file' => $file,
+            '!installation_instructions' => l(t('installation instructions'), $installation_instructions_path))
+        ),
+        'severity' => REQUIREMENT_ERROR,
+        'value' => $t('Unavailable'),
+      );
+    }
+
+    $files = array('bluff-src.js', 'bluff-min.js', 'bluff.js');
+    $bluff_count = 0;
+    foreach ($files as $file) {
+      if (file_exists($path . $file)) {
+        $bluff_count++;
+      }
+    }
+    if ($bluff_count == 0) {
+      $requirements['charts_graphs_bluff_' . $file] = array(
+        'title' => $t('Bluff %file file', array('%file' => $file)),
+        'description' => $t('Bluff needs the %file file to work properly.
+          Please review Bluff !installation_instructions.',
+          array(
+            '%file' => $file,
+            '!installation_instructions' => l(t('installation instructions'), $installation_instructions_path))
+        ),
+        'severity' => REQUIREMENT_ERROR,
+        'value' => $t('Unavailable'),
+      );
+    }
+    elseif ($bluff_count > 1) {
+      $requirements['charts_graphs_bluff_excess_bluff.js'] = array(
+        'title' => $t('Too many Bluff files'),
+        'description' => $t('Bluff needs only one of the following files to work
+          properly: %files. There are %number of them. Please leave only one.
+          You can review Bluff !installation_instructions.',
+          array(
+            '%files' => implode(', ', $files),
+            '%number' => $bluff_count,
+            '!installation_instructions' => l(t('installation instructions'), $installation_instructions_path))
+        ),
+        'severity' => REQUIREMENT_ERROR,
+        'value' => $t('%number installed', array('%number' => $bluff_count)),
+      );
+    }
+
+  }
+
+  return $requirements;
+}

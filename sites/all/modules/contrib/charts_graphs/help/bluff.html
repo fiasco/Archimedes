@@ -1,0 +1,118 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!-- $Id: bluff.html,v 1.1.2.7.2.7 2010/11/17 22:17:32 rsevero Exp $ -->
+<html>
+  <head>
+    <title>Charts and Graphs - Bluff</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    <h3>Library pages</h3>
+    <p>For definitive info about Bluff library please see it's
+      <a href="http://bluff.jcoglan.com">home page</a> and it's
+      <a href="http://bluff.jcoglan.com/api.html">reference page</a>.</p>
+    <h3>Installation</h3>
+    <p>Since version 3.6.1 Bluff is dual licensed - MIT and GPL - so all
+      necessary files to enable Bluff are now included with Charts and Graphs:</p>
+    <ul>
+      <li>bluff-min.js</li>
+      <li>excanvas.js</li>
+      <li>js-class.js</li>
+    </ul>
+    <h3>Usage</h3>
+    <p>The quickest code to get something graphed using bluff:</p>
+    <pre>
+&lt;?php
+function charts_graphs_test() {
+  $canvas = charts_graphs_get_graph('bluff');
+
+  $canvas->title = "Bluff Chart";
+  $canvas->type = "line"; // a chart type supported by the charting engine. See further in the doc for the list.
+  $canvas->y_legend = "Y Legend";
+  $canvas->colour = '#D54C78';
+  $canvas->theme = 'keynote';
+  $canvas->series = array(
+    'Some Value' => array(9,6,7,9,5,7,6,9,7),
+    'Page Views' => array(6,7,9,5,7,6,9,7,3),
+  );
+  $canvas->x_labels = array('one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine');
+
+  $out = $canvas->get_chart();
+
+  return $out;
+}
+</pre>
+      <h4>Arbitrary parameters</h4>
+      <p>Bluff implementation for Charts and Graphs supports the
+        <i>parameters</i> general parameter. With it the user can set any
+        parameter in Bluff as everything set in it will be passed to
+        Bluff and will override any default setting or setting
+        through the standard settings supported by Charts and Graphs.</p>
+      <p>The <i>parameters</i> option is an array where each key is the
+        property name and each value is the value for the same property.</p>
+      <p>For function call, the key is the function name and the value should be
+        an array. The contents of this array are the parameters to be sent to
+        the function.</p>
+      <p>This way the user has complete control on what is being included on the
+        charting call.</p>
+      <i>With great power comes great responsability.</i>
+      <p>As the ultimate control feature the <i>parameters</i> option intends to
+        be, the values are passed absolutely unchanged as defined by the user.
+        There is no urlencoding, quotes inclusion or any other safety net. The
+        values should be set in a safe and complete manner.</p>
+      <h5>Example</h5>
+      <p>Property - setting bar width and spacing:</p>
+      <pre>
+&lt;php
+$canvas->parameters['no_data_message'] = '"No data"';
+</pre>
+      <p>will result in</p>
+      <pre>
+g.no_data_message = "No data";
+</pre>
+      <p>being included in the chart definition. Observe that the double quotes
+        were included in the value passed to parameters.</p>
+      <p>Function - setting bar width and spacing:</p>
+      <pre>
+&lt;php
+$canvas->parameters['set_margins'] = array(12);
+</pre>
+      <p>will result in</p>
+      <pre>
+g.set_margins(12);
+</pre>
+      <p>being included in the chart definition.</p>
+    <h3>Graph types supported</h3>
+    <p>Bluff supports all <a href="general_reference#type">main</a> and all
+      <a href="general_reference#other_standardized_types">standardized graph</a>
+      types, except the donut graph type. It also supports the following graph
+      types:</p>
+    <dl>
+      <dt>mini_bar</dt>
+        <dd>Bar graph suitable for small graphs.</dd>
+      <dt>mini_pie</dt>
+        <dd>Pie graph suitable for small graphs.</dd>
+      <dt>mini_side_bar</dt>
+        <dd>Side bar graph suitable for small graphs.</dd>
+    </dl>
+    <h3>Special parameters</h3>
+      <p>Charts and Graphs supports the following special parameters for Bluff:</p>
+      <dl>
+        <dt>transpose</dt>
+          <dd>the optional parameter <b>transpose</b>, if set to true, will cause
+            Bluff to pick the opposite data orientation to the one it would have
+            picked automatically. This orientation defines if each column or each
+            row is one data serie.</dd>
+      </dl>
+    <h3>Unsupported properties</h3>
+      <p>The Bluff charting library doesn't support the
+        <a href="general_reference#y_legend">y_legend</a> property.</p>
+    <h3>Examples</h3>
+    <p>The examples below will only work if you have the Bluff submodule
+      configured correctly.</p>
+    <ul>
+      <li><a href="/charts_graphs/test/bluff/line/Bluff - Line example">Line example</a></li>
+      <li><a href="/charts_graphs/test/bluff/bar/Bluff - Bar example">Bar example</a></li>
+      <li><a href="/charts_graphs/test/bluff/pie/Bluff - Pie example">Pie example</a></li>
+    </ul>
+  </body>
+</html>

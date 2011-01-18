@@ -1,0 +1,14 @@
+; $Id: charts_graphs.info,v 1.1.2.2 2010/06/25 21:34:01 rsevero Exp $
+
+name = "Charts and Graphs"
+description = "Charts and Graphs Core API."
+package = "Charts"
+core = 6.x
+php = 5.1
+
+; Information added by drupal.org packaging script on 2010-11-18
+version = "6.x-2.6"
+core = "6.x"
+project = "charts_graphs"
+datestamp = "1290046267"
+

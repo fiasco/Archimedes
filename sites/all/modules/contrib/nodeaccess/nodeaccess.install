@@ -1,0 +1,154 @@
+<?php
+
+// $Id $
+
+/**
+ * Implementation of hook_install().
+ */
+function nodeaccess_install() {
+  // Create tables.
+  drupal_install_schema('nodeaccess');
+  // Set up default permissions to be view for authenticated and
+  // anonymous users, and all permissions for author.
+  $grants = array();
+  $grants[] = array('gid' => 1, 'realm' => 'nodeaccess_rid',
+                    'grant_view' => 1, 'grant_update' => 0, 'grant_delete' => 0);
+  $grants[] = array('gid' => 2, 'realm' => 'nodeaccess_rid',
+                    'grant_view' => 1, 'grant_update' => 0, 'grant_delete' => 0);
+  $author_prefs = array();
+  foreach (node_get_types() as $type => $name) {
+    variable_set('nodeaccess_' . $type, $grants);
+    $author_prefs[$type] = array('grant_view' => 1, 'grant_update' => 1, 'grant_delete' => 1);
+  }
+  variable_set('nodeaccess_authors', $author_prefs);
+  // Set up all permissions to be editable by default.
+  $grant_prefs = array('view' => 1, 'edit' => 1, 'delete' => 1);
+  variable_set('nodeaccess-grants', $grant_prefs);
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function nodeaccess_schema() {
+  $schema['nodeaccess'] = array(
+    'fields' => array(
+      'nid'          => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'gid'          => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'realm'        => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''),
+      'grant_view'   => array('type' => 'int', 'size' => 'tiny', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'grant_update' => array('type' => 'int', 'size' => 'tiny', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'grant_delete' => array('type' => 'int', 'size' => 'tiny', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0)
+    ),
+    'primary key' => array('nid', 'gid', 'realm')
+  );
+  $schema['nodeaccess_role_alias'] = array(
+    'fields' => array(
+      'rid'          => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'name'         => array('type' => 'varchar', 'length' => 50, 'not null' => TRUE, 'default' => ''),
+      'weight'       => array('type' => 'int', 'not null' => TRUE, 'default' => 0)
+    ),
+    'primary key' => array('rid')
+  );
+  return $schema;
+}
+
+/**
+ * Implementations of hook_update_N().
+ */
+function nodeaccess_update_1() {
+  // Create new nodeaccess table.
+  $schema['nodeaccess'] = array(
+    'fields' => array(
+      'nid'          => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'gid'          => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'realm'        => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => ''),
+      'grant_view'   => array('type' => 'int', 'size' => 'tiny', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'grant_update' => array('type' => 'int', 'size' => 'tiny', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'grant_delete' => array('type' => 'int', 'size' => 'tiny', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0)
+    ),
+    'primary key' => array('nid', 'gid', 'realm')
+  );
+  $ret = array();
+  db_create_table($ret, 'nodeaccess', $schema['nodeaccess']);
+
+  // Update format of content type specific variables.
+  foreach (node_get_types() as $type => $name) {
+    $perm = variable_get('nodeaccess_' . $type, array());
+    if (count($perm) > 0) {
+      foreach ($perm['rid'] as $role => $grants) {
+        $new[] = array('gid' => $grants[0],
+                       'realm' => 'nodeaccess_rid',
+                       'grant_view' => $grants['grant_view'],
+                       'grant_update' => $grants['grant_update'],
+                       'grant_delete' => $grants['grant_delete']
+                       );
+      }
+      variable_set('nodeaccess_' . $type, $new);
+    }
+  }
+
+  // Populate the new nodeaccess table with data from node_access.
+  $result = db_query("SELECT na.nid, na.gid, na.realm, na.grant_view, na.grant_update, na.grant_delete, n.type FROM {node_access} na LEFT JOIN {node} n ON n.nid = na.nid WHERE na.realm = 'nodeaccess_uid' OR na.realm = 'nodeaccess_rid'");
+  while ($row = db_fetch_object($result)) {
+    $default = variable_get('nodeaccess_' . $row->type, array());
+    if ($default['grant_view'] != $row->grant_view &&
+        $default['grant_update'] != $row->grant_update &&
+        $default['grant_delete'] != $row->grant_delete) {
+      db_query("INSERT INTO {nodeaccess} (nid, gid, realm, grant_view, grant_update, grant_delete) VALUES (%d, %d, '%s', %d, %d, %d)",
+        $row->nid, $row->gid, $row->realm, $row->grant_view, $row->grant_update, $row->grant_delete);
+    }
+  }
+  return $ret;
+}
+
+function nodeaccess_update_2() {
+  // Clear menu cache because of changed menu location.
+  cache_clear_all(NULL, 'cache_menu');
+}
+
+function nodeaccess_update_3() {
+  // Create new nodeaccess_role_alias table.
+  $schema['nodeaccess_role_alias'] = array(
+    'fields' => array(
+      'rid'          => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'name'         => array('type' => 'varchar', 'length' => 50, 'not null' => TRUE, 'default' => ''),
+      'weight'       => array('type' => 'int', 'not null' => TRUE, 'default' => 0)
+    ),
+    'primary key' => array('rid')
+  );
+  $ret = array();
+  db_create_table($ret, 'nodeaccess_role_alias', $schema['nodeaccess_role_alias']);
+  // Set up default alias names to match role names and default
+  // weights to 0. Do this for allowed roles only.
+  $allowedrole = variable_get('nodeaccess-roles', array());
+  foreach ($allowedrole as $rid => $value) {
+    if ($value) {
+      db_query("INSERT INTO {nodeaccess_role_alias} SELECT rid, name, 0 FROM {role} WHERE rid = %d", $rid);
+    }
+  }
+  // Set up all permissions to be editable by default.
+  $grant_prefs = array('view' => 1, 'edit' => 1, 'delete' => 1);
+  variable_set('nodeaccess-grants', $grant_prefs);
+  return $ret;
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function nodeaccess_uninstall() {
+  // Remove variables.
+  variable_del('nodeaccess-priority');
+  variable_del('nodeaccess-preserve');
+  variable_del('nodeaccess-grants');
+  variable_del('nodeaccess-roles');
+  variable_del('nodeaccess-types');
+  variable_del('nodeaccess_authors');
+  foreach (node_get_types() as $type => $name) {
+    variable_del('nodeaccess_' . $type);
+    variable_del('nodeaccess_' . $type . '_userreference');
+  }
+  // Remove tables.
+  drupal_uninstall_schema('nodeaccess');
+}
+
+

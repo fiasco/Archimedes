@@ -1,0 +1,60 @@
+<?php
+// $Id: cmis_sync.install,v 1.1.4.4.2.12 2010/03/08 20:30:25 cbalan Exp $
+ 
+/**
+ * Implementation of hook_install()
+ */
+function cmis_sync_install() {
+  drupal_install_schema('cmis_sync');
+}
+
+/**
+ * Implementation of hook_uninstall()
+ */
+function cmis_sync_uninstall() {
+  drupal_uninstall_schema('cmis_sync');
+  variable_del('cmis_sync_map');
+}
+
+/**
+ * Implementation of hook_schema()
+ */
+function cmis_sync_schema() {
+  $schema['cmis_sync_node'] = array(
+    'fields' => array(
+      'id'  => array('type' => 'serial', 'not null' => TRUE, 'description' => t('Primary Key: Unique ID.')),
+      'nid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'cmis_repositoryId' => array(
+        'type'     => 'varchar',
+        'length'   => 255,
+        'not null' => TRUE,
+        'default'  => '',
+        'description' => t('repositoryId from the CMIS repository'),
+      ),  
+      'cmis_objectId' => array(
+        'type'     => 'varchar',
+        'length'   => 255,
+        'not null' => TRUE,
+        'default'  => '',
+        'description' => t('objectId from the CMIS repository'),
+      ),  
+      'changed_timestamp' => array(
+        'type'     => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default'  => 0,
+        'description' => t('The most recent time the drupal node has been saved/synchronized'),
+      )
+    ),
+    'unique keys' => array(
+      'nid'     => array('nid'),
+    ),
+    'indexes' => array(
+      'cmis_sync_repo_idx' => array('cmis_repositoryId'),
+      'cmis_sync_obj_idx' => array('cmis_objectId')
+    ),
+    'primary key' => array('id'),  
+  );
+  
+  return $schema;
+}

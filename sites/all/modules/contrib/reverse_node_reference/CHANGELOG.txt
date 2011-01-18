@@ -1,0 +1,7 @@
+// $Id: CHANGELOG.txt,v 1.1.2.2 2010/07/16 07:34:45 markuspetrux Exp $
+
+6.x-1.0 2010-07-16
+==================
+
+- This is the first stable release of the module.
+- No changes since initial checkin.

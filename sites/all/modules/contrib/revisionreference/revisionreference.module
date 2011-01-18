@@ -1,0 +1,792 @@
+<?php
+// $Id: revisionreference.module,v 1.1.2.4 2008/08/23 03:30:04 danielb Exp $
+
+/**
+ * @file
+ * Defines a field type for referencing a node revision from a node.
+ */
+
+/**
+ * Implementation of hook_menu().
+ */
+function revisionreference_menu() {
+  $items = array();
+  $items['revisionreference/autocomplete'] = array(
+    'title' => 'revisionreference autocomplete',
+    'page callback' => 'revisionreference_autocomplete',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function revisionreference_theme() {
+  return array(
+    'revisionreference_item_simple' => array(
+      'arguments' => array('item' => NULL),
+    ),
+    'revisionreference_item_advanced' => array(
+      'arguments' => array('item' => NULL, 'view' => NULL),
+    ),
+    'revisionreference_select' => array(
+      'arguments' => array('element' => NULL),
+    ),
+    'revisionreference_autocomplete' => array(
+      'arguments' => array('element' => NULL),
+    ),
+    'revisionreference_formatter_default' => array(
+      'arguments' => array('element'),
+    ),
+    'revisionreference_formatter_plain' => array(
+      'arguments' => array('element'),
+    ),
+    'revisionreference_formatter_full' => array(
+      'arguments' => array('element'),
+      'function' => 'theme_revisionreference_formatter_full_teaser',
+    ),
+    'revisionreference_formatter_teaser' => array(
+      'arguments' => array('element'),
+      'function' => 'theme_revisionreference_formatter_full_teaser',
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_field_info().
+ *
+ * Here we indicate that the content module will use its default
+ * handling for the view of this field.
+ *
+ * Callbacks can be omitted if default handing is used.
+ * They're included here just so this module can be used
+ * as an example for custom modules that might do things
+ * differently.
+ */
+function revisionreference_field_info() {
+  return array(
+    'revisionreference' => array(
+      'label' => t('Node revision reference'),
+      'description' => t('Store the ID of a node revision as an integer value.'),
+      'callbacks' => array(
+        'tables' => CONTENT_CALLBACK_DEFAULT,
+        'arguments' => CONTENT_CALLBACK_DEFAULT,
+        ),
+      ),
+  );
+}
+
+/**
+ * Implementation of hook_field_settings().
+ */
+function revisionreference_field_settings($op, $field) {
+  switch ($op) {
+    case 'form':
+      $form = array();
+      $form['referenceable_revision_types'] = array(
+        '#type' => 'checkboxes',
+        '#title' => t('Content types that can be referenced'),
+        '#multiple' => TRUE,
+        '#default_value' => is_array($field['referenceable_revision_types']) ? $field['referenceable_revision_types'] : array(),
+        '#options' => node_get_types('names'),
+      );
+      if (module_exists('views')) {
+        $views = array('--' => '--');
+        $all_views = views_get_all_views();
+        foreach ($all_views as $view) {
+          // Only views that have fields will work for our purpose.
+          if (!empty($view->display['default']->display_options['fields'])) {
+            $views[t('Existing Views')][$view->name] = $view->name;
+          }
+        }
+
+        if (count($views) > 1) {
+          $form['advanced_revision'] = array(
+             '#type' => 'fieldset',
+             '#title' => t('Advanced - Nodes that can be referenced (View)'),
+             '#collapsible' => TRUE,
+             '#collapsed' => !isset($field['advanced_view']) || $field['advanced_view'] == '--',
+           );
+          $form['advanced_revision']['advanced_revision_view'] = array(
+            '#type' => 'select',
+            '#title' => t('View'),
+            '#options' => $views,
+            '#default_value' => isset($field['advanced_revision_view']) ? $field['advanced_revision_view'] : '--',
+            '#description' => t('Choose the "Views module" view that selects the nodes that can be referenced.<br />Note :<ul><li>Only views that have fields will work for this purpose.</li><li>This will discard the "Content types" settings above. Use the view\'s "filters" section instead.</li><li>Use the view\'s "fields" section to display additional informations about candidate nodes on node creation/edition form.</li><li>Use the view\'s "sort criteria" section to determine the order in which candidate nodes will be displayed.</li></ul>'),
+          );
+          $form['advanced_revision']['advanced_revision_view_args'] = array(
+            '#type' => 'textfield',
+            '#title' => t('View arguments'),
+            '#default_value' => isset($field['advanced_revision_view_args']) ? $field['advanced_revision_view_args'] : '',
+            '#required' => FALSE,
+            '#description' => t('Provide a comma separated list of arguments to pass to the view.'),
+          );
+        }
+      }
+      return $form;
+
+    case 'save':
+      $settings = array('referenceable_revision_types');
+      if (module_exists('views')) {
+        $settings[] = 'advanced_revision_view';
+        $settings[] = 'advanced_revision_view_args';
+      }
+      return $settings;
+
+    case 'database columns':
+      $columns = array(
+        'vid' => array('type' => 'int', 'unsigned' => TRUE, 'not null' => FALSE),
+      );
+      return $columns;
+
+    case 'views data':
+      $data = content_views_field_views_data($field);
+      $db_info = content_database_info($field);
+      $table_alias = content_views_tablename($field);
+
+      // Swap the filter handler to the 'in' operator.
+      $data[$table_alias][$field['field_name'] .'_vid']['filter']['handler'] = 'views_handler_filter_many_to_one_content';
+
+      // Add a relationship for related node revision.
+      $data[$table_alias][$field['field_name'] .'_vid']['relationship'] = array(
+        'base' => 'node_revisions',
+        'field' => $db_info['columns']['vid']['column'],
+        'handler' => 'views_handler_relationship',
+      );
+      return $data;
+  }
+}
+
+/**
+ * Implementation of hook_field().
+ */
+function revisionreference_field($op, &$node, $field, &$items, $teaser, $page) {
+  switch ($op) {
+    case 'validate':
+      $refs = _revisionreference_potential_references($field, TRUE);
+      foreach ($items as $delta => $item) {
+        if (is_array($item) && !empty($item['error_field'])) {
+          $error_field = $item['error_field'];
+          unset($item['error_field']);
+          if (!empty($item['vid'])) {
+            if (!in_array($item['vid'], array_keys($refs))) {
+              form_set_error($error_field, t("%name : This post can't be referenced.", array('%name' => t($field['widget']['label']))));
+            }
+          }
+        }
+      }
+      return $items;
+  }
+}
+
+/**
+ * Implementation of hook_content_is_empty().
+ */
+function revisionreference_content_is_empty($item, $field) {
+  if (empty($item['vid'])) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+/**
+ * Implementation of hook_field_formatter_info().
+ */
+function revisionreference_field_formatter_info() {
+  return array(
+    'default' => array(
+      'label' => t('Title (link)'),
+      'field types' => array('revisionreference'),
+      'multiple values' => CONTENT_HANDLE_CORE,
+    ),
+    'plain' => array(
+      'label' => t('Title (no link)'),
+      'field types' => array('revisionreference'),
+      'multiple values' => CONTENT_HANDLE_CORE,
+    ),
+    'full' => array(
+      'label' => t('Full node'),
+      'field types' => array('revisionreference'),
+      'multiple values' => CONTENT_HANDLE_CORE,
+    ),
+    'teaser' => array(
+      'label' => t('Teaser'),
+      'field types' => array('revisionreference'),
+      'multiple values' => CONTENT_HANDLE_CORE,
+    ),
+  );
+}
+
+/**
+ * Theme function for 'default' revisionreference field formatter.
+ */
+function theme_revisionreference_formatter_default($element) {
+  $output = '';
+  if (!empty($element['#item']['vid']) && is_numeric($element['#item']['vid']) && ($title = _revisionreference_titles($element['#item']['vid']))) {
+    //$revision = node_load(array('vid' => $element['#item']['vid']));
+    $nid = revisionreference_nid_from_vid($element['#item']['vid']);
+    if (revisionreference_vid_is_current($element['#item']['vid'], $nid)) {
+      $output = l($title, 'node/'. $nid);
+    }
+    else {
+      $output = l($title, 'node/'. $nid .'/revisions/'. $element['#item']['vid'] .'/view');
+    }
+  }
+  return $output;
+}
+
+/**
+ * Theme function for 'plain' revisionreference field formatter.
+ */
+function theme_revisionreference_formatter_plain($element) {
+  $output = '';
+  if (!empty($element['#item']['vid']) && is_numeric($element['#item']['vid']) && ($title = _revisionreference_titles($element['#item']['vid']))) {
+    $output = check_plain($title);
+  }
+  return $output;
+}
+
+/**
+ * Proxy theme function for 'full' and 'teaser' revisionreference field formatters.
+ */
+function theme_revisionreference_formatter_full_teaser($element) {
+  static $recursion_queue = array();
+  $output = '';
+  if (!empty($element['#item']['vid']) && is_numeric($element['#item']['vid'])) {
+    // If no 'referencing node' is set, we are starting a new 'reference thread'
+    if (!isset($node->referencing_node)) {
+      $recursion_queue = array();
+    }
+    $recursion_queue[] = $node->vid;
+    if (in_array($element['#item']['vid'], $recursion_queue)) {
+      // Prevent infinite recursion caused by reference cycles :
+      // if the node has already been rendered earlier in this 'thread',
+      // we fall back to 'default' (node title) formatter.
+      return theme('revisionreference_formatter_default', $element);
+    }
+    if ($referenced_node = node_load(array('vid' => $element['#item']['vid']))) {
+      $referenced_node->referencing_node = $node;
+      $referenced_node->referencing_field = $field;
+      _revisionreference_titles($element['#item']['vid'], $referenced_node->title);
+      $output = node_view($referenced_node, $element['#formatter'] == 'teaser');
+    }
+  }
+  return $output;
+}
+
+/**
+ * Helper function for formatters.
+ *
+ * Store node titles collected in the curent request.
+ */
+function _revisionreference_titles($vid, $known_title = NULL) {
+  static $titles = array();
+  if (!isset($titles[$vid])) {
+    $title = $known_title ? $known_title : db_result(db_query("SELECT title FROM {node_revisions} WHERE vid=%d", $vid));
+    $titles[$vid] = $title ? $title : '';
+  }
+  return $titles[$vid];
+}
+
+/**
+ * Implementation of hook_widget_info().
+ *
+ * We need custom handling of multiple values for the revisionreference_select
+ * widget because we need to combine them into a options list rather
+ * than display multiple elements.
+ *
+ * We will use the content module's default handling for default value.
+ *
+ * Callbacks can be omitted if default handing is used.
+ * They're included here just so this module can be used
+ * as an example for custom modules that might do things
+ * differently.
+ */
+function revisionreference_widget_info() {
+  return array(
+    'revisionreference_select' => array(
+      'label' => t('Select list'),
+      'field types' => array('revisionreference'),
+      'multiple values' => CONTENT_HANDLE_MODULE,
+      'callbacks' => array(
+        'default value' => CONTENT_CALLBACK_DEFAULT,
+      ),
+    ),
+    'revisionreference_autocomplete' => array(
+      'label' => t('Autocomplete text field'),
+      'field types' => array('revisionreference'),
+      'multiple values' => CONTENT_HANDLE_CORE,
+      'callbacks' => array(
+        'default value' => CONTENT_CALLBACK_DEFAULT,
+      ),
+    ),
+  );
+}
+
+/**
+ * Implementation of FAPI hook_elements().
+ *
+ * Any FAPI callbacks needed for individual widgets can be declared here,
+ * and the element will be passed to those callbacks for processing.
+ *
+ * Drupal will automatically theme the element using a theme with
+ * the same name as the hook_elements key.
+ *
+ * Autocomplete_path is not used by text_widget but other widgets can use it
+ * (see revisionreference and userreference).
+ */
+function revisionreference_elements() {
+  return array(
+    'revisionreference_select' => array(
+      '#input' => TRUE,
+      '#columns' => array('uid'), '#delta' => 0,
+      '#process' => array('revisionreference_select_process'),
+      ),
+    'revisionreference_autocomplete' => array(
+      '#input' => TRUE,
+      '#columns' => array('name'), '#delta' => 0,
+      '#process' => array('revisionreference_autocomplete_process'),
+      '#autocomplete_path' => FALSE,
+      ),
+    );
+}
+
+/**
+ * Implementation of hook_widget().
+ *
+ * Attach a single form element to the form. It will be built out and
+ * validated in the callback(s) listed in hook_elements. We build it
+ * out in the callbacks rather than here in hook_widget so it can be
+ * plugged into any module that can provide it with valid
+ * $field information.
+ *
+ * Content module will set the weight, field name and delta values
+ * for each form element. This is a change from earlier CCK versions
+ * where the widget managed its own multiple values.
+ *
+ * If there are multiple values for this field, the content module will
+ * call this function as many times as needed.
+ *
+ * @param $form
+ *   the entire form array, $form['#node'] holds node information
+ * @param $form_state
+ *   the form_state, $form_state['values'][$field['field_name']]
+ *   holds the field's form values.
+ * @param $field
+ *   the field array
+ * @param $items
+ *   array of default values for this field
+ * @param $delta
+ *   the order of this item in the array of subelements (0, 1, 2, etc)
+ *
+ * @return
+ *   the form item for a single element for this field
+ */
+function revisionreference_widget(&$form, &$form_state, $field, $items, $delta = 0) {
+  switch ($field['widget']['type']) {
+    case 'revisionreference_select':
+      $element = array(
+        '#type' => 'revisionreference_select',
+        '#default_value' => $items,
+      );
+      break;
+
+    case 'revisionreference_autocomplete':
+      $element = array(
+        '#type' => 'revisionreference_autocomplete',
+        '#default_value' => isset($items[$delta]) ? $items[$delta] : NULL,
+        '#value_callback' => 'revisionreference_autocomplete_value',
+      );
+      break;
+  }
+  return $element;
+}
+
+/**
+ * Value for a revisionreference autocomplete element.
+ *
+ * Substitute in the node title for the node vid.
+ */
+function revisionreference_autocomplete_value($element, $edit = FALSE) {
+  $field_key  = $element['#columns'][0];
+  if (!empty($element['#default_value'][$field_key])) {
+    $vid = $element['#default_value'][$field_key];
+    $args[] = $vid;
+    $row = db_fetch_object(db_query(db_rewrite_sql("
+      SELECT r.nid, r.timestamp, r.title, u.name AS user 
+      FROM {node_revisions} r 
+      LEFT JOIN {users} u ON r.uid = u.uid 
+      WHERE r.vid = %d", 'node_revisions', 'vid', $args), $args));
+
+    $current = revisionreference_vid_is_current($row->vid, $row->nid);
+    $value = $row->title .' [nid:'. $row->nid .'] '. ($current ? '(CUR) ' : '') . date('m/d/Y h:m', $row->timestamp) .' by '. $row->user .' [vid:'. $vid .']';
+    return array($field_key => $value);
+  }
+  return array($field_key => NULL);
+}
+
+/**
+ * Process an individual element.
+ *
+ * Build the form element. When creating a form using FAPI #process,
+ * note that $element['#value'] is already set.
+ *
+ * The $fields array is in $form['#field_info'][$element['#field_name']].
+ */
+function revisionreference_select_process($element, $edit, $form_state, $form) {
+  // The revisionreference_select widget doesn't need to create its own
+  // element, it can wrap around the optionwidgets_select element.
+  // Add a validation step where the value can be unwrapped.
+  $field_key  = $element['#columns'][0];
+  $element[$field_key] = array(
+    '#type' => 'optionwidgets_select',
+    '#default_value' => isset($element['#value']) ? $element['#value'] : '',
+    '#element_validate' => array('optionwidgets_validate', 'revisionreference_select_validate'),
+
+    // The following values were set by the content module and need
+    // to be passed down to the nested element.
+    '#field_name' => $element['#field_name'],
+    '#delta' => $element['#delta'],
+    '#columns' => $element['#columns'],
+    '#title' => $element['#title'],
+    '#required' => $element['#required'],
+    '#description' => $element['#description'],
+  );
+  return $element;
+}
+
+/**
+ * Process an individual element.
+ *
+ * Build the form element. When creating a form using FAPI #process,
+ * note that $element['#value'] is already set.
+ *
+ */
+function revisionreference_autocomplete_process($element, $edit, $form_state, $form) {
+  // The revisionreference autocomplete widget doesn't need to create its own
+  // element, it can wrap around the text_textfield element and add an autocomplete
+  // path and some extra processing to it.
+  // Add a validation step where the value can be unwrapped.
+  $field_key = $element['#columns'][0];
+
+  $element[$field_key] = array(
+    '#type' => 'text_textfield',
+    '#default_value' => isset($element['#value']) ? $element['#value'] : '',
+    '#autocomplete_path' => 'revisionreference/autocomplete/'. $element['#field_name'],
+    '#element_validate' => array('revisionreference_autocomplete_validate'),
+
+    // The following values were set by the content module and need
+    // to be passed down to the nested element.
+    '#field_name' => $element['#field_name'],
+    '#delta' => $element['#delta'],
+    '#columns' => $element['#columns'],
+    '#title' => $element['#title'],
+    '#required' => $element['#required'],
+    '#description' => $element['#description'],
+  );
+  return $element;
+}
+
+/**
+ * Validate an select element.
+ *
+ * Remove the wrapper layer and set the right element's value.
+ * We don't know exactly where this element is, so we drill down
+ * through the element until we get to our key.
+ */
+function revisionreference_select_validate($element, &$form_state) {
+  $field_key  = $element['#columns'][0];
+  $new_parents = array();
+  $value = $form_state['values'];
+  foreach ($element['#parents'] as $parent) {
+    $value = $value[$parent];
+    if ($parent == $field_key) {
+      $element['#parents'] = $new_parents;
+      form_set_value($element, $value, $form_state);    
+      break;
+    }
+    $new_parents[] = $parent;
+  }
+}
+
+/**
+ * Validate an autocomplete element.
+ *
+ * Remove the wrapper layer and set the right element's value.
+ */
+function revisionreference_autocomplete_validate($element, &$form_state) {
+  $field_name = $element['#field_name'];
+  $field = content_fields($field_name);
+  $field_key  = $element['#columns'][0];
+  $delta = $element['#delta'];
+  $value = $element['#value'][$field_key];
+  $vid = NULL;
+  if (!empty($value)) {
+    preg_match('/^(?:\s*|(.*) )?\[\s*vid\s*:\s*(\d+)\s*\]$/', $value, $matches);
+    if (!empty($matches)) {
+      // explicit vid
+      list(, $text, $vid) = $matches;
+      $title = explode(' [nid:', $text);
+      $title = $title[0];
+      if (!empty($title) && ($n = node_load(array('vid' => $vid))) && $title != $n->title) {
+        form_set_error($element[$field_key], t('%name: Title mismatch. Please check your selection.'), array('%name' => t($element[$field_key]['#title'])));
+      }
+    }
+    else {
+      // no explicit vid
+      // TODO :
+      // the best thing would be to present the user with an additional form,
+      // allowing the user to choose between valid candidates with the same title
+      // ATM, we pick the first matching candidate...
+      $vids = _revisionreference_potential_references($field, FALSE, $value, TRUE);
+      $vid = (!empty($vids)) ? array_shift(array_keys($vids)) : 0;
+    }
+  }
+  form_set_value($element, $vid, $form_state);
+  return $element;
+}
+
+/**
+ * Implementation of hook_allowed_values().
+ */
+function revisionreference_allowed_values($field) {
+  $options = _revisionreference_potential_references($field, TRUE);
+  foreach ($options as $key => $value) {
+    $options[$key] = _revisionreference_item($field, $value);
+  }
+  if (!$field['required']) {
+    $options = array(0 => '<'. t('none') .'>') + $options;
+  }
+  return $options;
+}
+
+/**
+ * Fetch an array of all candidate referenced nodes,
+ * for use in presenting the selection form to the user.
+ */
+function _revisionreference_potential_references($field, $return_full_nodes = FALSE, $string = '', $exact_string = false) {
+  if (module_exists('views')
+  && !empty($field['advanced_revision_view'])
+  && $field['advanced_revision_view'] != '--'
+  && ($view = revisionreference_get_view($field, $string, $exact_string))) {
+    // advanced field : referenceable nodes defined by a view
+    // let views.module build the query
+    $options = array();
+    foreach ($view->result as $item) {
+      $options[$item->vid] = _revisionreference_item($field, $item);
+    }
+    return $options;
+  }
+  else {
+    // standard field : referenceable nodes defined by content types
+    // build the appropriate query
+    $related_types = array();
+    $args = array();
+
+    if (is_array($field['referenceable_revision_types'])) {
+      foreach ($field['referenceable_revision_types'] as $related_type) {
+        if ($related_type) {
+          $related_types[] = " n.type = '%s'";
+          $args[] = $related_type;
+        }
+      }
+    }
+
+    $related_clause = implode(' OR ', $related_types);
+
+    if (!count($related_types)) {
+      return array();
+    }
+
+    if (isset($string)) {
+      $string_clause = $exact_string ? " AND r.title = '%s'" : " AND r.title LIKE '%%%s%'";  
+      $related_clause = "(". $related_clause .")". $string_clause;
+      $args[] = $string;
+    }
+
+    $result = db_query(db_rewrite_sql("
+      SELECT r.vid, r.nid, r.timestamp, r.title AS node_title, n.type AS node_type, u.name AS user 
+      FROM {node_revisions} r 
+      LEFT JOIN {node} n ON r.nid = n.nid 
+      LEFT JOIN {users} u ON r.uid = u.uid 
+      WHERE ". $related_clause ." 
+      ORDER BY n.title, n.vid", 'node_revisions', 'vid', $args), $args);
+  }
+
+  $rows = array();
+
+  while ($node = db_fetch_object($result)) {
+    if ($return_full_nodes) {
+      $rows[$node->vid] = $node;
+    }
+    else {
+      $rows[$node->vid] = $node->node_title;
+    }
+  }
+
+  /* To Do: 2nd query to select nodes that match the nid of selected nodes but have vids that don't match already selected vids */
+  return $rows;
+}
+
+/**
+ * Build a revisionreference view.
+ *
+ * Keep the rendered view in a static variable so it isn't
+ * re-rendered more than one in a session, as when getting
+ * a list of potential references and then running each of
+ * them through the theme.
+ * 
+ * If $string or $exact_string change, we'll need a new query,
+ * so in that case we need to refresh the view.
+ */
+function revisionreference_get_view($field, $string = '', $exact_string = false) {
+  static $view = NULL, $prev_string, $prev_exact_string;
+  $view_name = $field['advanced_revision_view'];
+  if (module_exists('views')
+  && !empty($view_name)
+  && $view_name != '--'
+  && (!isset($view) || $view->name != $view_name || $prev_string != $string || $prev_exact_string != $exact_string)) {
+    $prev_string = $string;
+    $prev_exact_string = $exact_string;
+    $view = views_get_view($view_name);
+    $view->init();
+
+    // TODO is this the right way to do this?
+    // make sure the fields get included in the query.
+
+    // TODO Which display should we use here?
+    // In our Views 1 to Views 2 updates we are
+    // putting fields in the 'default' display.
+    $display = 'default';
+    $view->init_display($display);
+    $view->display[$display]->style_plugin = 'list';
+    $view->display[$display]->row_plugin = 'fields';
+    $view->display_handler->set_option('use_pager', FALSE);
+    $view->display_handler->set_option('items_per_page', 0);
+        
+    // Get arguments for the view.
+    if (isset($field['advanced_revision_view_args'])) {
+      // TODO: Support Tokens using token.module ?
+      $view_args = array();
+      $view_args = array_map('trim', explode(',', $field['advanced_revision_view_args']));
+    }
+    else {
+      $view_args = array();
+    }
+
+    //We do need title field, so add it if not present (unlikely, but...)
+    if (!array_key_exists('title', $view->display[$display]->display_options['fields'])) {
+      $view->add_item($display, 'field', 'node', 'title');
+    }
+    if (!empty($string)) {
+      // We use the title filter in the view, so make sure it's there.
+      if (!array_key_exists('title', $view->display[$display]->display_options['filters'])) {
+        $view->add_item($display, 'filter', 'node', 'title');
+      }
+      // TODO Is this the best way to set values?
+      $view->display[$display]->display_options['filters']['title']['value'] = $string;
+      $view->display[$display]->display_options['filters']['title']['operator'] = $exact_string ? '=' : 'contains';
+    }
+
+    // Make sure the query is not cached
+    $view->is_cacheable = FALSE;
+    $view->execute_display($display, $view_args);
+  }
+  return $view;
+  
+}
+
+/**
+ * Retrieve a pipe delimited string of autocomplete suggestions
+ */
+function revisionreference_autocomplete($field_name, $string = '') {
+  $fields = content_fields();
+  $field = $fields[$field_name];
+  $matches = array();
+  
+  $references = _revisionreference_potential_references($field, TRUE, $string);
+  foreach ($references as $row) {
+    $current = revisionreference_vid_is_current($row->vid, $row->nid);
+    $matches[$row->node_title .' [nid:'. $row->nid .'] '. ($current ? '(CUR) ' : '') . date('m/d/Y h:m', $row->timestamp) .' by '. $row->user .' [vid:'. $row->vid .']'] = _revisionreference_item($field, $row);
+  }
+  drupal_json($matches);
+}
+
+function _revisionreference_item($field, $item, $html = FALSE) {
+  if (module_exists('views') && isset($field['advanced_revision_view']) && $field['advanced_revision_view'] != '--' && ($view = revisionreference_get_view($field))) {
+    $field_names = array();
+    foreach ($view->field as $name => $viewfield) {
+      $field_names[] = isset($viewfield->definition['content_field_name']) ? $viewfield->definition['content_field_name'] : $name;
+    }
+    $output = theme('revisionreference_item_advanced', $item, $field_names, $view);
+    if (!$html) {
+      // Views theming runs check_plain (htmlentities) on the values.
+      // We reverse that with html_entity_decode.
+      $output = html_entity_decode(strip_tags($output), ENT_QUOTES);
+    }
+  }
+  else {
+    $output = theme('revisionreference_item_simple', $item);
+    $output = $html ? check_plain($output) : $output;
+  }
+  return $output;
+}
+
+function theme_revisionreference_item_advanced($item, $field_names, $view) {
+  $item_fields = array();
+  $item = (array) $item;
+  foreach ($item as $delta => $value) {
+    // remove link tags (ex : for node titles)
+    $value = preg_replace('/<a[^>]*>(.*)<\/a>/iU', '$1', $value);
+    if (!empty($value)) {
+      $item_fields[] = "<span class='view-field view-data-$field_names[$delta]'>$value</span>";;
+    }
+  }
+  $output = implode(' - ', $item_fields);
+  $output = "<span class='view-item view-item-$view->name'>$output</span>";
+  return $output;
+}
+
+function theme_revisionreference_item_simple($item) {
+  $current = revisionreference_vid_is_current($item->vid, $item->nid);
+  return $item->node_title .' [nid:'. $item->nid .'] '. ($current ? '(CUR) ' : '') . date('m/d/Y h:m', $item->timestamp) .' by '. $item->user .' [vid:'. $item->vid .']';
+}
+
+/**
+ * FAPI theme for an individual elements.
+ *
+ * The textfield or select is already rendered by the
+ * textfield or select themes and the html output
+ * lives in $element['#children']. Overvide this theme to
+ * make custom changes to the output.
+ *
+ * $element['#field_name'] contains the field name
+ * $element['#delta]  is the position of this element in the group
+ */
+function theme_revisionreference_select($element) {
+  return $element['#children'];
+}
+
+function theme_revisionreference_autocomplete($element) {
+  return $element['#children'];
+}
+
+function revisionreference_nid_from_vid($vid) {
+  $args[] = $vid;
+  $nid = db_result(db_query(db_rewrite_sql("SELECT nid from {node_revisions} WHERE vid = %d", 'node_revisions', 'vid', $args), $args));
+  return $nid;
+}
+
+function revisionreference_vid_is_current($vid, $nid = NULL) {
+  static $max_vid_for_nids = array();
+  if ($nid == NULL) {
+    $nid = revision_nid_from_vid($vid);
+  }
+  if (!isset($max_vid_for_nids[$nid])) {
+    $args[] = $nid;
+    $max_vid_for_nids[$nid] = db_result(db_query(db_rewrite_sql("SELECT MAX(vid) AS vid from {node_revisions} WHERE nid = %d", 'node_revisions', 'vid', $args), $args));
+  }
+  return ($max_vid_for_nids[$nid] == $vid);
+}

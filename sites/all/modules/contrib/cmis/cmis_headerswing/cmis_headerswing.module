@@ -1,0 +1,59 @@
+<?php 
+// $Id: cmis_headerswing.module,v 1.1.2.5 2010/03/08 20:30:25 cbalan Exp $
+
+/**
+ * Implementation of hook_cmis_service($url, $properties, $settings)
+ * 
+ * $conf example:
+ * $conf['cmis_repositories'] = array(
+ *   'default' => array(
+ *     'user' => 'admin',
+ *     'password' => 'admin',
+ *     'label' => 'local cmis repo',
+ *     'url' => 'http://127.0.0.1:8080/cmis',
+ *     'transport' => 'cmis_headerswing', 
+ *     'headerswing_headers' => array(
+ *       'HTTP_HOST' => 'FRONTENT_HOST',
+ *       'HTTP_HOST' => 'FRONTENT_HOST_AGAIN',
+ *       'HTTP_USER' => 'FRONTENT_USER',
+ *       'PHP_AUTH_USER' => 'FRONTENT_USER'
+ *       'PHP_AUTH_DIGEST' => 'FRONTEND_AUTH'
+ *     )
+ *   ),
+ *  ... 
+ * );
+ * 
+ */
+function cmis_headerswing_cmis_service($url, $properties, $settings) { 
+  if (array_key_exists('headerswing_headers', $settings)) {
+    if (!array_key_exists('headers', $properties)) {
+      $properties['headers'] = array();
+    }
+    
+    foreach($settings['headerswing_headers'] as $header_src => $header_dest) {
+      if(array_key_exists($header_src, $_SERVER)) {
+        $properties['headers'][$header_dest] = $_SERVER[$header_src];
+      }
+    }
+  }
+  
+  /* example on how to decorate cmis_common_cmis_service() method:
+  $retval = cmis_common_cmis_service($url, $properties, $settings, TRUE);
+  
+  // ...
+  // do some custom code here, before doing the actual call
+  // ...
+  
+  // execute curl session. These fields are mandatory in order to
+  // get a working hook_cmis_service() implementation.
+  $retval->body = curl_exec($retval->curl_session);
+  $retval->code = curl_getinfo($retval->curl_session, CURLINFO_HTTP_CODE);
+  $retval->content_type = curl_getinfo($retval->curl_session, CURLINFO_CONTENT_TYPE);
+  $retval->content_length = curl_getinfo($retval->curl_session, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+  curl_close($retval->curl_session);
+  
+  return $retval;
+  */  
+  
+  return cmis_common_cmis_service($url, $properties, $settings);
+}

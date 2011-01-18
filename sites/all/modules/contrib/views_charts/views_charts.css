@@ -1,0 +1,5 @@
+/* $Id: views_charts.css,v 1.1.2.3 2010/07/08 13:52:08 rsevero Exp $ */
+
+div.views_charts_chart_types_hidden {
+  display: none;
+}

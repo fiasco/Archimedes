@@ -1,0 +1,17 @@
+; $Id: nodeaccess.info,v 1.1.2.2.2.1 2008/07/21 23:28:46 mantyla Exp $
+name = Nodeaccess
+description = Provides per node access control
+core = 6.x
+
+; Information added by drupal.org packaging script on 2008-01-04
+version = "6.x-1.x-dev"
+project = "nodeaccess"
+datestamp = "1199405206"
+
+
+; Information added by drupal.org packaging script on 2009-03-08
+version = "6.x-1.3"
+core = "6.x"
+project = "nodeaccess"
+datestamp = "1236471659"
+

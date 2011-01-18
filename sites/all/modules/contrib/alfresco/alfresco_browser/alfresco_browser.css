@@ -1,0 +1,7 @@
+/* $Id: alfresco_browser.css,v 1.1.2.1 2010/04/26 12:33:03 xergius Exp $ */
+
+#embedded-browser {
+  border:2px solid #ccc;
+  height:600px;
+  width:100%;
+}

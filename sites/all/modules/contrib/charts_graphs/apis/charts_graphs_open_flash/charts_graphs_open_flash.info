@@ -1,0 +1,16 @@
+; $Id: charts_graphs_open_flash.info,v 1.1.2.1 2010/07/01 20:59:33 rsevero Exp $
+
+name = "Charts and Graphs: Open Flash Charts 2"
+description = "Open Flash Charts 2 implementation for Charts and Graphs."
+dependencies[] = charts_graphs
+dependencies[] = swftools
+package = "Charts"
+core = 6.x
+php = 5.1
+
+; Information added by drupal.org packaging script on 2010-11-18
+version = "6.x-2.6"
+core = "6.x"
+project = "charts_graphs"
+datestamp = "1290046267"
+

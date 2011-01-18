@@ -1,0 +1,14 @@
+; $Id: reverse_node_reference.info,v 1.1.2.1 2010/05/13 14:29:19 markuspetrux Exp $
+name = Reverse Node Reference
+description = Enhances Views with reverse relationships for Node Reference fields.
+dependencies[] = nodereference
+dependencies[] = views
+package = CCK
+core = 6.x
+
+; Information added by drupal.org packaging script on 2010-07-16
+version = "6.x-1.0"
+core = "6.x"
+project = "reverse_node_reference"
+datestamp = "1279266009"
+

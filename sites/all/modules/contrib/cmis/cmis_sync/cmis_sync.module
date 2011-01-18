@@ -1,0 +1,90 @@
+<?php
+// $Id: cmis_sync.module,v 1.1.4.5.2.11 2010/03/08 20:30:25 cbalan Exp $
+
+/**
+ * Config sample:
+ *
+ * 
+ * $conf['cmis_sync_map'] = array(
+ *    'book' => array ( // minimal settings. 
+ *      'enabled' => TRUE,
+ *      'cmis_folderPath' => '/cbalan-test/page'
+ *    ),
+ * 
+ *    'page' => array ( // advanced settings.
+ *      'enabled' => FALSE,
+ *      'cmis_type' => 'cmis:document',
+ *      'cmis_repositoryId' => 'default',
+ *      'cmis_folderPath' => '/Company Home/Guest Home/',
+ *      //'cmis_folderId' => 'workspace://SpacesStore/234234....',
+ *      'content_field' => 'body', // default
+ *      'fields' => array(
+ *        'title'=>'title',
+ *         array('drupal'=>'nid', 'cmis'=>'cmis:custom_field', 'cmis to drupal' => FALSE, 'drupal to cmis' => TRUE),
+ *      ),
+ *      'deletes' => FALSE, // Sync deletes
+ *      'subfolders' => FALSE, // Sync sub folders
+ *      'full_sync_next_cron' => FALSE, // Grab only new items if FALSE, otherwise sync all items under cmis_folderPath
+ *    ),
+ *    
+ *    'other_drupal_content_type' => array (
+ *      // synchronization state for 'drupal_content_type1' 
+ *      'enabled' => TRUE,
+ *
+ *      // CMIS repostiory id
+ *      'cmis_repositoryId' => '00000-12eq123213-...',
+ *        
+ *      // cmis type used on cmis repository side.   
+ *      'cmis_type' => 'cmis:document', 
+ *        
+ *      // cmis folder used for synchronization
+ *      'cmis_folderId' => 'workspace://SpacesStore/234wed23redaaa'
+ *      'cmis_folderPath' => '/'
+ *        
+ *      // node field considered as content for cmis objects
+ *      'content_field' => 'body'
+ *        
+ *      // used to map node fields to cmis object properties 
+ *      'fields' => array(
+ *        'title' => 'cmis:objectProperty1',
+ *        'body' => 'cmis:objectProperty2'
+ *      )
+ *    ),
+ *   ...
+ * );
+ * 
+ */
+
+/**
+ * Implementation of hook_nodeapi() for CMIS sync module.
+ * 
+ */
+function cmis_sync_nodeapi(& $node, $op, $teaser, $page) {
+  if (variable_get('cmis_sync_nodeapi_enabled', TRUE)) {
+    if (in_array($op, array('insert', 'update', 'delete')) && !isset($node->cmis_sync_disabled)) {
+      module_load_include('drupal.inc', 'cmis_sync');
+      try {
+        _cmis_sync_drupal_cmis_update(array('node' => $node, 'op' => $op));
+      }
+      catch (CMISException $e) {
+        cmis_error_handler('cmis_sync_nodeapi', $e);  
+      }
+    }
+  }
+}
+
+/**
+ * Implementation of hook_cron
+ *  
+ */
+function cmis_sync_cron() {
+  if (variable_get('cmis_sync_cron_enabled', TRUE)) {
+    module_load_include('cmis.inc', 'cmis_sync');
+    try {
+      _cmis_sync_cmis_drupal_update();
+    }
+    catch (CMISException $e) {
+      cmis_error_handler('cmis_sync_cron', $e);  
+    }
+  }
+}

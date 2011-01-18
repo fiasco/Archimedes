@@ -1,0 +1,71 @@
+// $Id: CHANGELOG.txt,v 1.2.2.3 2010/04/26 12:33:02 xergius Exp $
+
+Alfresco 6.x-1.1, 2010-04-26
+============================
+
+You MUST run update.php for apply pending updates after uploading this release.
+
+Features:
+
+- Added capability to upload documents to the Alfresco repository from Drupal.
+- Added support for multiple authentication methods:
+  * Global: use only one account to authenticate against Alfresco (default).
+  * Single sign-on: use the Drupal account of each user to authenticate against
+    Alfresco repository. It is necessary that each user has an account Alfresco.
+- Added the ability to search the Alfresco repository from Drupal search.module
+- Added some statistics (total downloads, most recent time downloaded).
+- Added alfresco menu item on navigation menu:
+  * alfresco/upload: form to add content (upload) to a space.
+  * alfresco/import: form to import nodes from a space to Drupal (Alfresco Import)
+  * alfresco/repository: the repository browser (Alfresco Browser)
+  * alfresco/items: list of alfresco item nodes created on the site (with Views)
+- Added integration with other modules: Vertical Tabs, Admin Menu, Admin Theme
+  and optional Libraries module support. 
+
+Changes Alfresco Browser module:
+
+Now Alfresco browser module requires the Ext JS Library. Please download the
+Ext JS library, extract the archive and copy its contents to the following
+location: sites/all/libraries/ext. If you are using Libraries module, you can
+place Ext JS in the Libraries module's search path.
+
+- Added capability to upload and delete files from the browser.
+- Added configurable home space and page size (admin/settings/alfresco/browser).
+- Added internationalization.
+- Removed Ext JS library files from module.
+
+Other changes:
+
+- Updated Alfresco PHP API (based on Alfredo-PHPAPI-R2)
+  http://www.sugarforge.org/frs/?group_id=860
+- Workaround for incorrect targetNamespace dictionary-service.wsdl
+  https://issues.alfresco.com/jira/browse/ALFCOM-1913
+- Support for more folder types (cm:folder, st:sites, etc.)
+- Better integration with Views
+- Enhanced error logging (watchdog messages)
+- Update translations and .pot to current code
+- Fixed some other minor issues, added comments, etc.
+
+
+Alfresco 6.x-1.0, 2009-03-23
+============================
+- alfresco_browser: New module which allows users to visualize, search, browse
+  and retrieve nodes of the Alfresco repository.
+- alfresco_attach: Fixed permission checking when remove attach items.
+- alfresco_attach: Simplified attach existing nodes.
+- Removed unnecessary files from Alfresco PHP Library.
+- General code clean-up.
+- Minor fixes.
+
+
+Alfresco 6.x-1.0-beta2, 2009-02-29
+==================================
+- #364525: Fixed datetime parsing bug
+- Added status report with detailed test connection to alfresco repository. 
+- Increase maximum amount of characters to accept as input of title field.
+- Fixed message node link when save a duplicated node.  
+
+
+Alfresco 6.x-1.0-beta1, 2009-01-14
+==================================
+- Initial public release.

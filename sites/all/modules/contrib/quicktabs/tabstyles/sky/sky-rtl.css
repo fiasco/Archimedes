@@ -1,0 +1,10 @@
+/* $Id: sky-rtl.css,v 1.1.2.1 2008/12/12 17:02:37 pasqualle Exp $ */
+
+ul.quicktabs_tabs.quicktabs-style-sky li {
+  float: right;
+}
+
+ul.quicktabs_tabs.quicktabs-style-sky li a,
+ul.quicktabs_tabs.quicktabs-style-sky li a:visited {
+  float: right;
+}

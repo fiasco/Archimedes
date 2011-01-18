@@ -1,0 +1,138 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!-- $Id: amcharts.html,v 1.1.2.5.2.8 2010/11/02 13:16:36 rsevero Exp $ -->
+<html>
+  <head>
+    <title>Charts and Graphs - amCharts</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    <h3>Library pages</h3>
+      <p>For definitive info about amCharts library please see it's
+        <a href="http://www.amcharts.com/">home page</a> and it's
+        <a href="http://www.amcharts.com/docs/">reference page</a>.</p>
+    <h3>Instalation</h3>
+      <p>You need to download <a href="http://www.amcharts.com/download">amCharts</a>
+        files. Specifically	Column & Bar, Line & Area, Pie & Donut zip files.</p>
+      <p>Unfortunately amCharts ships as several zips, so you need to download
+        each one from the above path:</p>
+      <ul>
+        <li>Column & Bar (e.g. amcolumn_x.x.x.x.zip)</li>
+        <li>Line & Area (e.g. amline_x.x.x.x.zip)</li>
+        <li>Pie & Donut (e.g. ampie_x.x.x.x.zip)</li>
+      </ul>
+      <p>and within each of these zips you will find the following files:</p>
+      <ul>
+        <li>amcolumn.swf (in the amcolumn directory of the amcolumn zip)</li>
+        <li>amline.swf (in the amline directory of the amline zip)</li>
+        <li>ampie.swf (in the ampie directory of the ampie zip)</li>
+      </ul>
+      <p>Download and place them in the downloaded folder of the Drupal Charts
+        and Graphs module, directly, without any folder structure inside the
+        downloaded folder (e.g. into
+        sites/all/modules/charts_graphs/apis/charts_graphs_amcharts/downloaded).</p>
+      <h4>Dependency</h4>
+        <h5>SMFTools module</h5>
+          <p>amCharts implementation for Charts and Graphs dependends on the
+            <a href="http://drupal.org/project/swftools">SWFTools</a> module.</p>
+          <p>At this point, you should be able to start using AmCharts, but it is
+            highly recommended that you complete following three steps as well:</p>
+          <ol>
+            <li>download: http://code.google.com/p/swfobject zip file, extract
+              it and copy the swfobject.js file to
+              <i>sites/all/modules/swftools/shared/swfobject2/swfobject.js</i></li>
+            <li>enable SWFObject2 module</li>
+            <li>go to SWFTools embeding configuration located at:
+              http://yourdomain.com/admin/settings/swftools/embed and under
+              <i>Embedding Methods</i> make <i>SWFObject 2 - JavaScript</i> the
+              default method</li>
+          </ol>
+        <h5>DOM extension</h5>
+          <p>amCharts for Charts and Graphs also depends on PHP's DOM extension.
+            It is a standard PHP extension. If you have any problem, please see
+            <a href="http://www.php.net/manual/en/dom.setup.php">DOM Setup</a>.</p>
+    <h3>Usage</h3>
+      <p>The quickest code to get something graphed using AmCharts:</p>
+    <pre>
+&lt;?php
+function charts_graphs_test() {
+  $canvas = charts_graphs_get_graph('amcharts');
+
+  $canvas->title = 'AmCharts Chart';
+  $canvas->type = 'line';
+  $canvas->y_legend = 'Y Legend';
+  $canvas->colour = '#808000';
+  $canvas->theme = 'keynote';
+  $canvas->series = array(
+    'Some Value' => array(9,6,7,9,5,7,6,9,7),
+    'Page Views' => array(6,7,9,5,7,6,9,7,3),
+  );
+  $canvas->x_labels = array('one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine');
+
+  $out = $canvas->get_chart();
+
+  return $out;
+}
+</pre>
+      <h4>License key</h4>
+        <p>License key owners can refer to the following code to use their keys:</p>
+<pre>
+&lt;?php
+  $canvas->key = 'YOUR_KEY';
+</pre>
+      <h4>Arbitrary parameters</h4>
+        <p>amCharts implementation for Charts and Graphs supports the
+          <i>settings</i>, <i>chart_series</i>, <i>chart_graphs</i> and <i>pie</i>
+          general parameters. With then the user can set any parameter in amCharts
+          as everything set in it will be passed to amCharts through appropriate
+          XML files and will override any default setting or setting through the
+          standard settings supported by Charts and Graphs.</p>
+        <p>For details on how to set any of these optional parameters, please see
+          <a href="arbitrary_xml">Arbitrary XML Settings</a>.</p>
+        <p>The <i>settings</i> array deals with the contents of the settings file.</p>
+        <p> The other three arrays deals with the contents of the data file.</p>
+        <p>This way the user has complete control on what is being included on the
+          charting call.</p>
+        <i>With great power comes great responsability.</i>
+        <p>As the ultimate control feature the <i>parameters</i> option intends to
+          be, the values are passed absolutely unchanged as defined by the user.
+          There is no urlencoding, quotes inclusion or any other safety net. The
+          values should be set in a safe and complete manner.</p>
+        <h5>Example</h5>
+          <p>Setting bar width and spacing:</p>
+      <pre>
+&lt;php
+$canvas->parameters['chbh'] = "25,5,10";
+</pre>
+    <h3>Graph types supported</h3>
+      <p>amCharts supports all <a href="general_reference#type">main</a> and
+        <a href="general_reference#other_standardized_types">standardized graph</a>
+        types. It also supports the following graph types:</p>
+      <dl>
+        <dt>100_stacked_bar</dt>
+          <dd>Stacked bar where columns equalized at the same height and values
+            take up a percentage of each column.</dd>
+        <dt>bar_3d</dt>
+          <dd>Columns are 3D and are positioned one behind another.</dd>
+        <dt>100_stacked_side_bar</dt>
+          <dd>Stacked side bar where columns equalized at the same width and
+            values take up a percentage of each column.</dd>
+        <dt>side_bar_3d</dt>
+          <dd>3D side bars positioned one behind another.</dd>
+        <dt>pie_3d</dt>
+          <dd>3D pie.</dd>
+        <dt>donut_3d</dt>
+          <dd>3D donut.</dd>
+      </dl>
+    <h3>Unsupported properties</h3>
+      <p>The amCharts charting library doesn't support the
+        <a href="general_reference#y_step">y_step</a> property.</p>
+    <h3>Examples</h3>
+      <p>The examples below will only work if you have the amCharts submodule
+        configured correctly.</p>
+      <ul>
+        <li><a href="/charts_graphs/test/amcharts/line/amCharts - Line example">Line example</a></li>
+        <li><a href="/charts_graphs/test/amcharts/bar/amCharts - Bar example">Bar example</a></li>
+        <li><a href="/charts_graphs/test/amcharts/pie/amCharts - Pie example">Pie example</a></li>
+      </ul>
+  </body>
+</html>

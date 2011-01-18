@@ -1,0 +1,15 @@
+<?php 
+// $Id: cmis_browser.install,v 1.2.2.2.2.11 2010/03/08 20:30:24 cbalan Exp $
+
+/**
+ * Implementation of hook_install()
+ */
+function cmis_browser_install() {
+  return;
+}
+/**
+ * Implementation of hook_uninstall()
+ */
+function cmis_browser_uninstall() {
+  return;
+}

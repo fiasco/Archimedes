@@ -1,0 +1,9 @@
+<?php
+// $Id: cmis.install,v 1.2.2.1.2.11 2010/03/08 20:30:24 cbalan Exp $
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function cmis_uninstall() {
+  variable_del('cmis_vendor');
+}

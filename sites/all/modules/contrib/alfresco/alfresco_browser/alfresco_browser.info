@@ -1,0 +1,13 @@
+; $Id: alfresco_browser.info,v 1.1.2.2 2010/04/26 12:33:03 xergius Exp $
+name = Alfresco browser
+description = Allows users to visualize, search, browse and retrieve nodes of the Alfresco repository.
+package = Alfresco
+dependencies[] = alfresco
+core = 6.x
+
+; Information added by drupal.org packaging script on 2010-04-26
+version = "6.x-1.1"
+core = "6.x"
+project = "alfresco"
+datestamp = "1272291303"
+

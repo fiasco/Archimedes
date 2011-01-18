@@ -1,0 +1,18 @@
+<?php
+// $Id: tabs.install,v 1.2 2009/08/25 23:33:02 nedjo Exp $
+
+/** 
+ * Update to remove obsolete variable. 
+ */
+function tabs_update_1() {
+  variable_del('tabs_auto_height');
+}
+
+/** 
+ * Implementation of hook_uninstall(). 
+ */
+function tabs_uninstall() {
+ foreach (array('slide', 'fade', 'speed', 'navigation', 'nav_next', 'nav_previous', 'descriptive_urls') as $type) {
+   variable_del('tabs_'. $type);
+ }
+}

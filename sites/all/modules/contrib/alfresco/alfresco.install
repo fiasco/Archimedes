@@ -1,0 +1,571 @@
+<?php
+// $Id: alfresco.install,v 1.2.2.2 2010/04/26 12:33:02 xergius Exp $
+
+/**
+ * @file
+ * Install and configure Alfresco module.
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function alfresco_install() {
+  drupal_install_schema('alfresco');
+
+  // Alfresco built-in content model
+  // @see http://wiki.alfresco.com/wiki/Data_Dictionary_Guide#Built-in_Content_Model_Namespaces
+  // @todo: Habilitar la modificación de los tipos de contenidos desde la configuración
+  $default_folder_types = array(
+    'cm_folder',
+    'cm_systemfolder',
+    'st_sites',
+    'st_site',
+    'fm_forums',
+    'fm_forum',
+    'fm_topic',
+    'app_configurations',
+    'app_glossary',
+    'wca_formfolder',
+    'wca_webfolder',
+    'wcm_avmfolder',
+    'wcm_avmplainfolder',
+    'wcm_avmlayeredfolder',
+  );
+  variable_set('alfresco_folder_types', $default_folder_types);
+}
+
+/**
+ * Implementation of hook_enable().
+ */
+function alfresco_enable() {
+  $t = get_t();
+  $args = array('@url' => url('admin/settings/alfresco'));
+  drupal_set_message($t('Please visit the <a href="@url">Alfresco settings page</a> for configure the repository location and user credentials.', $args));
+}
+
+/**
+ * Implementation of hook_disable().
+ */
+function alfresco_disable() {
+}
+
+/**
+ * Implementation of hook_requirements().
+ */
+function alfresco_requirements($phase) {
+  $requirements = array();
+
+  // Verify if the Alfresco PHP and library dependencies are available.
+  _alfresco_verify_php_library(&$requirements);
+
+  // Verify connection Alfresco Repository only if Alfresco PHP library is available.
+  if ($phase == 'runtime' && drupal_requirements_severity($requirements) != REQUIREMENT_ERROR) {
+    _alfresco_verify_connection_repository(&$requirements);
+  }
+
+  return $requirements;
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function alfresco_uninstall() {
+
+  // Delete variables
+  $variables = array(
+    'alfresco_authentication_method',
+    'alfresco_credentials_username',
+    'alfresco_credentials_password',
+    'alfresco_file_downloads',
+    'alfresco_folder_types',
+    'alfresco_http_request_fails',
+    'alfresco_repository_url',
+    'alfresco_statistics_count_downloads',
+    'alfresco_statistics_day_timestamp',
+    'alfresco_ticket_timeout',
+    'alfresco_workaround_dictionary_service_wsdl',
+  );
+  foreach ($variables as $variable) {
+    variable_del($variable);
+  }
+
+  // Remove all alfresco_items nodes
+  $result = db_query("SELECT nid FROM {node} WHERE type = 'alfresco_item'");
+  while ($obj = db_fetch_object($result)) {
+    node_delete($obj->nid);
+  }
+
+  // Remove the node type
+  //node_type_delete('alfresco_item');
+
+  // Remove tables
+  drupal_uninstall_schema('alfresco');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function alfresco_schema() {
+
+  $schema['alfresco_node'] = array(
+    'fields' => array(
+      'vid' => array(
+        'type'     => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default'  => 0
+      ),
+      'nid' => array(
+        'type'     => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default'  => 0
+      ),
+      'reference' => array(
+        'description' => 'The Alfresco node reference (UUID)',
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => ''
+      ),
+      // @todo Renombrar esta columna porque ya existe este campo en la tabla node
+      'timestamp' => array(
+        'description' => 'The most recent time the {alfresco_node} has been saved',
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0
+      ),
+
+      /*********************************
+       * Alfresco Content Domain Model *
+       *********************************/
+
+      // Filename (Object type)
+      'cm_name' => array(
+        'description' => 'The cm:name property',
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => '',
+      ),
+      // Title (Titled aspect)
+      'cm_title' => array(
+        'description' => 'The cm:title property',
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => FALSE,
+        'default'     => '',
+      ),
+      // Description (Titled aspect)
+      'cm_description' => array(
+        'description' => 'The cm:description property',
+        'type'        => 'text',
+        'not null'    => FALSE,
+      ),
+      // Author (Author aspect)
+      'cm_author' => array(
+        'description' => 'The cm:author property',
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => FALSE,
+        'default'     => '',
+      ),
+      // Created (Auditable aspect)
+      'cm_created' => array(
+        'description' => 'The cm:created property',
+        'type'        => 'int',
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      // Creator (Auditable aspect)
+      'cm_creator' => array(
+        'description' => 'The cm:creator property',
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => '',
+      ),
+      // Modified (Auditable aspect)
+      'cm_modified' => array(
+        'description' => 'The cm:modified property',
+        'type'        => 'int',
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      // Modifier (Auditable aspect)
+      'cm_modifier' => array(
+        'description' => 'The cm:modifier property',
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => '',
+      ),
+    ),
+    'indexes' => array(
+      'nid' => array('nid'),
+      'reference' => array('reference')
+    ),
+    'primary key' => array('vid'),
+  );
+
+  $schema['alfresco_content'] = array(
+    'description' => 'Content Descriptor: includes content store URL, MIME type, etc.',
+    'fields' => array(
+      'vid' => array(
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'nid' => array(
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'url' => array(
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => '',
+      ),
+      'mimetype' => array(
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => '',
+      ),
+      'size' => array(
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+      ),
+      'encoding' => array(
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => '',
+      ),
+    ),
+    'indexes' => array(
+      'nid' => array('nid'),
+    ),
+    'primary key' => array('vid'),
+  );
+
+  // alfresco-6.x-1.1
+  $schema['alfresco_counter'] = array(
+    'description' => 'Download statistics for {alfresco_node}s.',
+    'fields' => array(
+      'nid' => array(
+        'description' => 'The {alfresco_node}.nid for these statistics.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0
+      ),
+      'totalcount' => array(
+        'description' => 'The total number of times the {alfresco_node} has been downloaded.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'size' => 'big'
+      ),
+      'daycount' => array(
+        'description' => 'The total number of times the {alfresco_node} has been downloaded today.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'size' => 'medium'
+      ),
+      'timestamp' => array(
+        'description' => 'The most recent time the {downloaded} has been downloaded.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
+      )
+    ),
+    'primary key' => array('nid'),
+  );
+
+  return $schema;
+}
+
+/**
+ * @todo: Add documentation.
+ */
+function _alfresco_verify_php_library(&$requirements) {
+  $t = get_t();
+
+  // Verify if the DOM PHP 5 extension is available.
+  $has_dom = class_exists('DOMDocument');
+  if (!$has_dom) {
+    $requirements['alfresco_php_dom'] = array(
+      'title' => $t('PHP DOM Extension'),
+      'value' => $t('Not found'),
+      'severity' => REQUIREMENT_ERROR,
+      'description' => $t("The DOM extension is part of PHP 5 core, but doesn't seem to be enabled on your system. You need to enable the DOM extension on your PHP installation."),
+    );
+  }
+
+  // Verify if the PHP SOAP extension is available.
+  $has_soap = class_exists('SoapClient');
+  if (!$has_soap) {
+    $requirements['alfresco_php_soap'] = array(
+      'title' => $t('PHP SOAP Extension'),
+      'value' => $t('Not found'),
+      'severity' => REQUIREMENT_ERROR,
+      'description' => $t('Read <a href="@url">SOAP manual</a> to find how to install and enable SOAP extension in your PHP installation.', array('@url' => 'http://php.net/manual/en/book.soap.php')),
+    );
+  }
+
+  if ($has_dom && $has_soap) {
+    // Verify if the Alfresco PHP library directory is available.
+    $lib_path = drupal_get_path('module', 'alfresco') .'/lib';
+    set_include_path(get_include_path() . PATH_SEPARATOR . $lib_path);
+    @include_once "Alfresco/Service/Repository.php";
+
+    $has_lib = class_exists('AlfRepository');
+    if (!$has_lib) {
+      $requirements['alfresco_php_library'] = array(
+        'title' => $t('Alfresco PHP library'),
+        'value' => $t('Not found'),
+        'severity' => REQUIREMENT_ERROR,
+        'description' => $t('Read README.txt to find how to install and enable Alfresco PHP Library. You can download and copy Alfresco PHP Library on %path', array('%path' => $lib_path)),
+      );
+    }
+    else {
+      $requirements['alfresco_php_library'] = array(
+        'title' => $t('Alfresco PHP library'),
+        'value' => $t('Found (%path).', array('%path' => $lib_path)),
+        'severity' => REQUIREMENT_OK,
+      );
+    }
+  }
+
+  return $requirements;
+}
+
+/**
+ * @todo: Add documentation.
+ */
+function _alfresco_verify_connection_repository(&$requirements) {
+  $t = get_t();
+
+  if (variable_get('alfresco_http_request_fails', FALSE)) {
+    $tip = $t('The last connection test failed. Please check <a href="@settings">Alfresco module settings</a>. You can <a href="@cron">run cron manually</a> to force other connection test.', array(
+      '@settings' => url('admin/settings/alfresco'),
+      '@cron' => url('admin/reports/status/run-cron'),
+    ));
+    $requirements['alfresco_repository'] = array(
+      'title' => $t('Alfresco repository'),
+      'value' => $t('Last HTTP request failed'),
+      'severity' => REQUIREMENT_ERROR,
+      'description' => $tip,
+    );
+    return;
+  }
+
+  $repository_url = variable_get('alfresco_repository_url', 'http://localhost:8080/alfresco/api');
+
+  // First check that Drupal can issue HTTP requests to repository.
+  $result = drupal_http_request($repository_url);
+  if (!isset($result->code) || ($result->code != 200)) {
+    // Mark that this request failed.
+    variable_set('alfresco_http_request_fails', TRUE);
+
+    $requirements['alfresco_repository'] = array(
+      'title' => $t('Alfresco repository'),
+      'value' => $t('HTTP request failed (error !code)', array('!code' => isset($result->code) ? $result->code : $t('None'))),
+      'severity' => REQUIREMENT_ERROR,
+      'description' => $t('Error message: !error', array('!error' => htmlentities($result->error))),
+    );
+
+    return;
+  }
+
+  try {
+    alfresco_include_lib('Repository');
+
+    $username = variable_get('alfresco_credentials_username', 'guest');
+    $password = base64_decode(variable_get('alfresco_credentials_password', base64_encode('guest')));
+
+    $repository = new AlfRepository($repository_url);
+    $ticket = $repository->authenticate($username, $password);
+    $session = $repository->createSession($ticket);
+    $store = $session->getStore('system', 'system');
+    $result = $session->query($store, 'PATH:"/sys:descriptor-current"');
+
+    if (is_array($result) && count($result)) {
+      $descriptor = $result[0];
+
+      if (!strstr($descriptor->sys_versionEdition, 'contentUrl')) {
+        $version = 'Alfresco '. $descriptor->sys_versionEdition .' - ';
+      }
+      else {
+        $version = 'Alfresco Enterprise - ';
+      }
+      $version .= sprintf('v%d.%d.%d', $descriptor->sys_versionMajor, $descriptor->sys_versionMinor, $descriptor->sys_versionRevision);
+
+      if (!empty($descriptor->sys_versionLabel)) {
+        $version .= sprintf(' (%s %d)', $descriptor->sys_versionLabel, $descriptor->sys_versionBuild);
+      }
+      else {
+        $version .= sprintf(' (%d)', $descriptor->sys_versionBuild);
+      }
+
+      $requirements['alfresco_repository'] = array(
+        'title' => $t('Alfresco repository'),
+        'value' => l($version, $repository_url),
+        'severity' => REQUIREMENT_OK,
+      );
+    }
+    else {
+      $requirements['alfresco_repository'] = array(
+        'title' => $t('Alfresco repository'),
+        'value' => $t('Connection attempt successful'),
+        'severity' => REQUIREMENT_OK,
+      );
+    }
+  }
+  catch (SoapFault $exception) {
+    if (isset($exception->detail) && is_object($exception->detail)) {
+      $detail = (array) $exception->detail;
+      $classname = array_shift(array_keys($detail));
+      $classvalue = array_shift(array_values($detail));
+      $message = array_shift(explode("\n", $classvalue->message));
+    }
+    else {
+      $message = $t('Unable to connect to Alfresco repository via SOAP. Faultcode: %faultcode', array('%faultcode' => $exception->faultcode));
+    }
+
+    $requirements['alfresco_repository'] = array(
+      'title' => $t('Alfresco repository'),
+      'value' => $t('SOAP request failed') . (!empty($classname) ? " ($classname)" : ''),
+      'severity' => REQUIREMENT_ERROR,
+      'description' => $message,
+    );
+  }
+}
+
+/**
+ * Implementation of hook_update_N().
+ *
+ * Convierte los campos cm_created y cm_modified de DATETIME a Unix timespamp y
+ * realiza la conversión de datos mediante Batch API.
+ */
+function alfresco_update_6100(&$sandbox) {
+  $ret = array('#finished' => 0);
+
+  if (!isset($sandbox['progress'])) {
+    $sandbox['progress'] = 0;
+    $sandbox['max'] = db_result(db_query('SELECT COUNT(*) FROM {alfresco_node}'));
+
+    db_change_field($ret, 'alfresco_node', 'cm_created', 'cm_created_temp', array('type' => 'datetime', 'not null' => TRUE));
+    db_change_field($ret, 'alfresco_node', 'cm_modified', 'cm_modified_temp', array('type' => 'datetime', 'not null' => TRUE));
+
+    db_add_field($ret, 'alfresco_node', 'cm_created', array('type' => 'int', 'not null' => TRUE, 'default' => 0));
+    db_add_field($ret, 'alfresco_node', 'cm_modified', array('type' => 'int', 'not null' => TRUE, 'default' => 0));
+  }
+
+  $limit = 20;
+  $result = db_query_range("SELECT vid, cm_created_temp, cm_modified_temp FROM {alfresco_node} ORDER BY vid ASC", $sandbox['progress'], $limit);
+  while ($node = db_fetch_object($result)) {
+    $created = strtotime($node->cm_created_temp);
+    $modified = strtotime($node->cm_modified_temp);
+
+    if ($created && $modified) {
+      $sql_update = "UPDATE {alfresco_node} SET cm_created = %d, cm_modified = %d WHERE vid = %d";
+      db_query($sql_update, $created, $modified, $node->vid);
+    }
+
+    $sandbox['progress']++;
+  }
+
+  $ret['#finished'] = empty($sandbox['max']) ? 1 : ($sandbox['progress'] / $sandbox['max']);
+  if ($ret['#finished'] === 1) {
+    db_drop_field($ret, 'alfresco_node', 'cm_created_temp');
+    db_drop_field($ret, 'alfresco_node', 'cm_modified_temp');
+  }
+
+  return $ret;
+}
+
+/**
+ * Implementation of hook_update_N().
+ *
+ * Añade nueva tabla para registrar estadísticas de descargas.
+ * Añade índices a las tablas alfresco_node y alfresco_content.
+ * Inicializa la variable alfresco_folder_types con los valores por defecto.
+ */
+function alfresco_update_6101() {
+  $ret = array();
+
+  $schema['alfresco_counter'] = array(
+    'description' => 'Download statistics for {alfresco_node}s.',
+    'fields' => array(
+      'nid' => array(
+        'description' => 'The {alfresco_node}.nid for these statistics.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0
+      ),
+      'totalcount' => array(
+        'description' => 'The total number of times the {alfresco_node} has been downloaded.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'size' => 'big'
+      ),
+      'daycount' => array(
+        'description' => 'The total number of times the {alfresco_node} has been downloaded today.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'size' => 'medium'
+      ),
+      'timestamp' => array(
+        'description' => 'The most recent time the {downloaded} has been downloaded.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0
+      )
+    ),
+    'primary key' => array('nid'),
+  );
+
+  db_create_table($ret, 'alfresco_counter', $schema['alfresco_counter']);
+
+  // Indexes
+  db_add_index($ret, 'alfresco_node', 'nid', array('nid'));
+  db_add_index($ret, 'alfresco_node', 'reference', array('reference'));
+  db_add_index($ret, 'alfresco_content', 'nid', array('nid'));
+
+  // Save defaults folder types
+  $default_folder_types = array(
+    'cm_folder',
+    'cm_systemfolder',
+    'st_sites',
+    'st_site',
+    'fm_forums',
+    'fm_forum',
+    'fm_topic',
+    'app_configurations',
+    'app_glossary',
+    'wca_formfolder',
+    'wca_webfolder',
+    'wcm_avmfolder',
+    'wcm_avmplainfolder',
+    'wcm_avmlayeredfolder',
+  );
+  variable_set('alfresco_folder_types', $default_folder_types);
+
+  return $ret;
+}

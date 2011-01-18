@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!-- $Id: googlecharts.html,v 1.1.2.4 2010/10/29 20:11:44 rsevero Exp $ -->
+<html>
+  <head>
+    <title>Charts and Graphs - Google Charts</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    <h3>Library pages</h3>
+      <p>For definitive info about Google Charts library please see it's
+        <a href="http://code.google.com/apis/charttools/index.html">home page</a>,
+        it's <a href="http://code.google.com/apis/chart/docs/making_charts.html">
+        reference page</a> and it's
+        <a href="http://code.google.com/apis/chart/docs/chart_params.html">
+        parameters reference page</a>.</p>
+    <h3>Instalation</h3>
+      <p>Google Charts is ready to be used, i.e., you don't have to install any
+        extra files.</p>
+      <h4>Dependency</h4>
+        <p>Google Charts has no extra dependencies.</p>
+    <h3>Usage</h3>
+      <p>The quickest code to get something graphed using Google Charts:</p>
+    <pre>
+&lt;?php
+function charts_graphs_test() {
+  $canvas = charts_graphs_get_graph('google-charts');
+
+  $canvas->title = 'Google Charts Chart';
+  $canvas->type = 'line';
+  $canvas->y_legend = 'Y Legend';
+  $canvas->colour = '#808000';
+  $canvas->theme = 'keynote';
+  $canvas->series = array(
+    'Some Value' => array(9,6,7,9,5,7,6,9,7),
+    'Page Views' => array(6,7,9,5,7,6,9,7,3),
+  );
+  $canvas->x_labels = array('one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine');
+
+  $out = $canvas->get_chart();
+
+  return $out;
+}
+</pre>
+      <h4>Arbitrary parameters</h4>
+      <p>Google Charts implementation for Charts and Graphs supports the
+        <i>parameters</i> general parameter. With it the user can set any
+        parameter in Google Charts as everything set in it will be passed to
+        Google Charts call and will override any default setting or setting
+        through the standard settings supported by Charts and Graphs.</p>
+      <p>The <i>parameters</i> option is an array where each key is the
+        property name and each value is the value for the same property.</p>
+      <p>This way the user has complete control on what is being included on the
+        charting call.</p>
+      <i>With great power comes great responsability.</i>
+      <p>As the ultimate control feature the <i>parameters</i> option intends to
+        be, the values are passed absolutely unchanged as defined by the user.
+        There is no urlencoding, quotes inclusion or any other safety net. The
+        values should be set in a safe and complete manner.</p>
+      <h5>Example</h5>
+      <p>Setting bar width and spacing:</p>
+      <pre>
+&lt;php
+$canvas->parameters['chbh'] = "25,5,10";
+</pre>
+    <h3>Graph types supported</h3>
+    <p>Google Charts supports all <a href="general_reference#type">main</a> and
+      <a href="general_reference#other_standardized_types">standardized graph</a>
+      types except donut. It also supports the following graph types:</p>
+    <dl>
+      <dt>pie_3d</dt>
+        <dd>3D pie chart.</dd>
+      <dt>queued_bar</dt>
+        <dd>Columns are positioned one behind another.</dd>
+    </dl>
+    <h3>Examples</h3>
+    <ul>
+      <li><a href="/charts_graphs/test/google-charts/line/Google Charts - Line example">Line example</a></li>
+      <li><a href="/charts_graphs/test/google-charts/bar/Google Charts - Bar example">Bar example</a></li>
+      <li><a href="/charts_graphs/test/google-charts/pie/Google Charts - Pie example">Pie example</a></li>
+    </ul>
+    <h3>Limitations</h3>
+      <p>Google Charts using GET HTTP method limits the URLs (where all graph
+        data is sent) to 2K so you might reach this limit (and not get a proper
+        graph) rather quickly.</p>
+      <p>It is possible to generate graphs with Google Charts formed of up to
+        16K of data but only through POST HTTP method. Google Charts for Charts
+        and Graphs does not support the POST method presently. Patches are
+        welcomed.</p>
+  </body>
+</html>

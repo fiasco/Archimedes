@@ -1,0 +1,29 @@
+<?php
+// $Id: reverse_node_reference.install,v 1.1.2.1 2010/05/13 14:29:19 markuspetrux Exp $
+
+/**
+ * @file
+ * Implementation of installation related hooks.
+ */
+
+/**
+ * Implementation of hook_requirements().
+ */
+function reverse_node_reference_requirements($phase) {
+  $requirements = array();
+  if ($phase == 'install') {
+    drupal_load('module', 'reverse_node_reference');
+    $db_version = db_version();
+    if (version_compare($db_version, REVERSE_NODE_REFERENCE_MYSQL_MINIMUM) < 0) {
+      $t = get_t();
+      $requirements['mysql'] = array(
+        'severity' => REQUIREMENT_ERROR,
+        'description' => $t('Your MySQL Server is too old (%current-version). The Reverse Node Reference module requires at least MySQL %required-version.', array(
+          '%current-version' => $db_version,
+          '%required-version' => REVERSE_NODE_REFERENCE_MYSQL_MINIMUM,
+        )),
+      );
+    }
+  }
+  return $requirements;
+}

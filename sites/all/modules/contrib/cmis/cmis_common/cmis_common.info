@@ -1,0 +1,11 @@
+; $Id: cmis_common.info,v 1.1.2.10 2010/03/08 20:30:25 cbalan Exp $
+name = CMIS Common
+description = CMIS common client implementation
+package = CMIS
+core = "6.x"
+; Information added by drupal.org packaging script on 2010-03-18
+version = "6.x-3.01"
+core = "6.x"
+project = "cmis"
+datestamp = "1268910030"
+

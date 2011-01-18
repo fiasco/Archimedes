@@ -1,0 +1,94 @@
+# $Id: pt-br.po,v 1.1.2.1 2010/07/08 19:21:35 rsevero Exp $
+#
+# LANGUAGE translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  views_charts.views.inc,v 1.1.2.1 2010/07/08 13:50:32 rsevero
+#  views_plugin_style_chart.inc,v 1.1.2.12 2010/07/08 18:47:54 rsevero
+#  views_charts.info,v 1.1.2.1 2010/07/08 13:50:32 rsevero
+#
+# rodrigo, 2010.
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2010-07-08 16:11-0300\n"
+"PO-Revision-Date: 2010-07-08 16:18-0300\n"
+"Last-Translator: rodrigo\n"
+"Language-Team: American English <kde-i18n-doc@kde.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Lokalize 1.0\n"
+
+#: views_charts.views.inc:14
+msgid "Charts"
+msgstr "Gráficos"
+
+#: views_charts.views.inc:15
+msgid "Displays rows in a chart."
+msgstr "Apresentar linhas em um gráfico."
+
+#: views_plugin_style_chart.inc:41;57
+msgid "-- None --"
+msgstr "-- Nenhum --"
+
+#: views_plugin_style_chart.inc:45
+msgid "Fields to be used in Chart Series"
+msgstr "Campos a serem usados como séries de dados"
+
+#: views_plugin_style_chart.inc:50
+msgid "These fields will be used as data fields for chart series. Fields must contain numeric data!"
+msgstr "Esse campos serão usados como séreis de dados. Eles devem conter informação numérica!"
+
+#: views_plugin_style_chart.inc:61
+msgid "Fields to be used as X axis labels"
+msgstr "Campos a serem usados como identificadores no eixo X"
+
+#: views_plugin_style_chart.inc:71
+msgid "Canvas width in pixels"
+msgstr "Largura da área de desenho do gráfico em pixels"
+
+#: views_plugin_style_chart.inc:77
+msgid "Canvas height in pixels"
+msgstr "Altura da área de desenho do gráfico em pixels"
+
+#: views_plugin_style_chart.inc:95
+msgid "Charting Engine"
+msgstr "Biblioteca de desenho de gráficos"
+
+#: views_plugin_style_chart.inc:117
+msgid "Chart Type"
+msgstr "Tipo de gráfico"
+
+#: views_plugin_style_chart.inc:132
+msgid "Window Mode (for flash charts only)"
+msgstr "Mode de apresentação (para bibliotecas Flash de desenho de gráfico)"
+
+#: views_plugin_style_chart.inc:139
+msgid "Min value of Y Axis"
+msgstr "Valor mínimo do eixo Y"
+
+#: views_plugin_style_chart.inc:145
+msgid "Y Legend"
+msgstr "Texto para o eixo Y"
+
+#: views_plugin_style_chart.inc:171
+msgid "Preview not available for Charts display style. Please view on a full page"
+msgstr ""
+"O estilo Charts não apresenta preview. Salve a visualização e veja o resultado através da URL "
+"definida."
+
+#: views_charts.info:0
+msgid "Views Charts"
+msgstr "Views Charts"
+
+#: views_charts.info:0
+msgid "Views Charts provides a new style for views: Charts."
+msgstr "Views Charts implementa um novo estilo para as visualizações: gráficos."
+
+#: views_charts.info:0
+msgid "Views"
+msgstr ""
+
+

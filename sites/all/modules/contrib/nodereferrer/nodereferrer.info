@@ -1,0 +1,14 @@
+; $Id: nodereferrer.info,v 1.2 2009/01/18 21:12:10 dopry Exp $
+name = Node Referrer 
+description = provides a counter part to CCK's nodereference field. 
+core = 6.x
+dependencies[] = content
+dependencies[] = nodereference
+package = CCK
+
+; Information added by drupal.org packaging script on 2010-08-20
+version = "6.x-1.0-rc2"
+core = "6.x"
+project = "nodereferrer"
+datestamp = "1282336292"
+

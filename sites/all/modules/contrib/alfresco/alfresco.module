@@ -1,0 +1,1422 @@
+<?php
+// $Id: alfresco.module,v 1.2.2.2 2010/04/26 12:33:02 xergius Exp $
+
+/**
+ * @file
+ * Enables Alfresco and Drupal integration.
+ */
+
+// ------------------------------------------------------------------
+// Constants
+// ------------------------------------------------------------------
+
+// Alfresco file downloads methods.
+// More info: http://wiki.alfresco.com/wiki/URL_Addressability
+define('ALFRESCO_FILE_DOWNLOADS_MODULE', 1);  // Private transfer
+define('ALFRESCO_FILE_DOWNLOADS_GUEST',  2);  // Direct Guest URL
+define('ALFRESCO_FILE_DOWNLOADS_TICKET', 3);  // Direct Ticket URL
+
+// Alfresco file exists behavior.
+define('ALFRESCO_FILE_EXISTS_RENAME',  0);  // Appends number until name is unique.
+define('ALFRESCO_FILE_EXISTS_REPLACE', 1);  // Replace the existing file.
+define('ALFRESCO_FILE_EXISTS_ERROR',   2);  // Do nothing and return error.
+
+// Alfresco authentication methods.
+define('ALFRESCO_AUTH_GLOBAL', 1);
+define('ALFRESCO_AUTH_SSO',    2);
+
+// Alfresco Node UUID regex
+// @see http://wiki.alfresco.com/wiki/Web_Service_Data_Types_XML_Schema
+define('ALFRESCO_REGEX_NODE_UUID', '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}');
+
+// ------------------------------------------------------------------
+// Help hooks
+// ------------------------------------------------------------------
+
+/**
+ * Implementation of hook_help().
+ */
+function alfresco_help($path, $arg) {
+
+  switch ($path) {
+    case 'alfresco':
+      return '<p>'. t('Alfresco project is a related set of modules which provides Drupal integration with Alfresco Content Platform.') .'</p>';
+
+    case 'alfresco/add':
+      return '<p>'. t('Add content to a space and enter information about the content to be uploaded.') .'</p>';
+
+    case 'alfresco/items':
+      return '<p>'. t('Display a list of all Alfresco items nodes.') .'</p>';
+
+    case 'admin/help#alfresco':
+      return '<p>'. t('Alfresco and Drupal integration.') .'</p>';
+  }
+}
+
+// ------------------------------------------------------------------
+// Node info and permissions hooks
+// ------------------------------------------------------------------
+
+/**
+ * Implementation of hook_node_info().
+ */
+function alfresco_node_info() {
+  // Provides a new 'alfresco_item' node content type.
+  return array(
+    'alfresco_item' => array(
+      'name'        => t('Alfresco item'),
+      'module'      => 'alfresco',
+      'description' => t('An <em>alfresco item</em> is a representation of a node held in the Alfresco repository. Alfresco nodes provide meta-data and structure to content.'),
+      'has_title'   => TRUE,
+      'title_label' => t('Title'),
+      'has_body'    => TRUE,
+      'body_label'  => t('Body'),
+    )
+  );
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function alfresco_perm() {
+  return array(
+    'administer alfresco',
+    'download alfresco content',
+    // -- Repository permissions --
+    //'access alfresco repository',
+    'upload alfresco repository',
+    'search alfresco repository',
+    // -- Content type permissions --
+    'create alfresco content',
+    'delete own alfresco content',
+    'delete any alfresco content',
+    'edit own alfresco content',
+    'edit any alfresco content',
+    'view alfresco download counter',
+  );
+}
+
+/**
+ * Implementation of hook_access().
+ */
+function alfresco_access($op, $node, $account) {
+
+  if ($op == 'create') {
+    return user_access('create alfresco content', $account);
+  }
+
+  if ($op == 'update') {
+    if (user_access('edit any alfresco content', $account) || (user_access('edit own alfresco content', $account) && ($account->uid == $node->uid))) {
+      return TRUE;
+    }
+  }
+
+  if ($op == 'delete') {
+    if (user_access('delete any alfresco content', $account) || (user_access('delete own alfresco content', $account) && ($account->uid == $node->uid))) {
+      return TRUE;
+    }
+  }
+}
+
+// ------------------------------------------------------------------
+// Menu hooks
+// ------------------------------------------------------------------
+
+/**
+ * Implementation of hook_menu().
+ */
+function alfresco_menu() {
+
+  // Settings
+
+  $items['admin/settings/alfresco'] = array(
+    'title' => 'Alfresco',
+    'description' => 'Configure Alfresco.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('alfresco_admin_settings'),
+    'access arguments' => array('administer alfresco'),
+    'file' => 'alfresco.admin.inc',
+  );
+
+  $items['admin/settings/alfresco/general'] = array(
+    'title' => 'General',
+    'weight' => 1,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  /*
+  $items['admin/settings/alfresco/display'] = array(
+    'title' => 'Display',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('alfresco_admin_display'),
+    'access arguments' => array('administer alfresco'),
+    'weight' => 2,
+    'type' => MENU_LOCAL_TASK,
+    'parent' => 'admin/settings/alfresco',
+    'file' => 'alfresco.admin.inc',
+  );
+  */
+
+  /*
+  $items['admin/settings/alfresco/model'] = array(
+    'title' => 'Model',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('alfresco_admin_model'),
+    'access arguments' => array('administer alfresco'),
+    'weight' => 3,
+    'type' => MENU_LOCAL_TASK,
+    'parent' => 'admin/settings/alfresco',
+    'file' => 'alfresco.admin.inc',
+  );
+  */
+
+  $items['admin/settings/alfresco/advanced'] = array(
+    'title' => 'Advanced',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('alfresco_admin_advanced'),
+    'access arguments' => array('administer alfresco'),
+    'weight' => 4,
+    'type' => MENU_LOCAL_TASK,
+    'parent' => 'admin/settings/alfresco',
+    'file' => 'alfresco.admin.inc',
+  );
+
+  // Node local taks (tabs)
+
+  $items['node/%alfresco_node/details'] = array(
+    'title' => 'Details',
+    'page callback' => 'alfresco_page_details',
+    'page arguments' => array(1),
+    'access callback' => 'alfresco_details_tab_access',
+    'access arguments' => array(1),
+    'weight' => 2,
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'alfresco.pages.inc',
+  );
+
+  // Node callbacks
+
+  $items['node/%alfresco_node/download/%alfresco_name'] = array(
+    'title' => 'Download',
+    'page callback' => 'alfresco_page_download',
+    'page arguments' => array(1),
+    'access callback' => 'alfresco_download_access',
+    'access arguments' => array(1),
+    'type' => MENU_CALLBACK,
+    'file' => 'alfresco.pages.inc',
+  );
+
+  // Pages
+
+  $items['alfresco'] = array(
+    'title' => 'Alfresco',
+    'page callback' => 'alfresco_overview_page',
+    'access arguments' => array('access content'),
+    'file' => 'alfresco.pages.inc',
+  );
+  $items['alfresco/upload'] = array(
+    'title' => 'Upload content',
+    'description' => 'Add content to a space and enter information about the content to be uploaded.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('alfresco_upload_form'),
+    'access callback' => 'alfresco_upload_access',
+    'file' => 'alfresco.pages.inc',
+  );
+  if (module_exists('views')) {
+    $items['alfresco/items'] = array(
+      'title' => 'View items',
+      'description' => 'Displays a list of alfresco items nodes.',
+      'page callback' => 'alfresco_items_page',
+      'access arguments' => array('access content'),
+      'file' => 'alfresco.pages.inc',
+    );
+  }
+
+  // AJAX Callbacks
+
+  $items['alfresco/autocomplete'] = array(
+    'title' => 'Alfresco node autocomplete',
+    'page callback' => 'alfresco_autocomplete',
+    'access callback' => 'alfresco_repository_access',
+    'type' => MENU_CALLBACK,
+    'file' => 'alfresco.pages.inc',
+  );
+
+  // Alfresco directo download from repository
+
+  $items['alfresco/download/%/%/%'] = array(
+    'title' => 'Alfresco download',
+    'page callback' => 'alfresco_download_content',
+    'page arguments' => array(2, 3, 4),
+    'access callback' => 'alfresco_repository_access',
+    'type' => MENU_CALLBACK,
+    'file' => 'alfresco.pages.inc',
+  );
+
+  return $items;
+}
+
+function alfresco_details_tab_access($node) {
+  return ($node->type == 'alfresco_item') && node_access('view', $node) && user_access('administer alfresco');
+}
+
+function alfresco_download_access($node) {
+  return ($node->type == 'alfresco_item') && node_access('view', $node) && user_access('download alfresco content') && !empty($node->cm_content);
+}
+
+function alfresco_upload_access() {
+  return alfresco_repository_access() && user_access('upload alfresco repository');
+}
+
+function alfresco_account_access($account) {
+  global $user;
+
+  if ($user->uid == 1) {
+    return TRUE;
+  }
+
+  return ($user->uid == $account->uid && alfresco_repository_access());
+}
+
+/**
+ * Devuelve cierto si el acceso directo al repositorio de Alfresco está
+ * permitido para el usuario.
+ */
+function alfresco_repository_access() {
+  global $user;
+
+  if ($user->uid == 1) {
+    return TRUE;
+  }
+
+  if ($user->uid == 0) {
+    return FALSE;
+  }
+
+  // Acceso al repositorio desactivado en el perfil del usuario.
+  if (isset($user->alfresco['status']) && $user->alfresco['status'] == 0) {
+    return FALSE;
+  }
+
+  // Comprobamos el permiso de usuario
+  /*
+  $access = user_access('access alfresco repository', $account);
+  if (!$access) {
+    return FALSE;
+  }
+  */
+
+  // Con autenticación global no es necesario comprobar la cuenta del usuario.
+  if (alfresco_auth_is_global()) {
+    return TRUE;
+  }
+
+  // Comprueba si la cuenta de Alfresco del usuario es válida.
+  if (isset($_SESSION['alfresco_account']['verified']) && $_SESSION['alfresco_account']['verified']) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Menu callback; loads an alfresco node object.
+ *
+ * @see http://drupal.org/node/209056
+ */
+function alfresco_node_load($arg) {
+
+  if (!is_numeric($arg)) {
+    return FALSE;
+  }
+  $node = node_load($arg);
+
+  if (!$node || $node->type != 'alfresco_item') {
+    return FALSE;
+  }
+  return $node;
+}
+
+/**
+ * Menu callback; loads the name of alfresco node object.
+ */
+function alfresco_name_load($arg) {
+  return $arg;
+}
+
+/**
+ * Returns the name (filename) of the currently alfresco node.
+ *
+ * @see http://drupal.org/node/109153#to_arg
+ */
+function alfresco_name_to_arg($arg) {
+
+  if (arg(0) == 'node' && is_numeric(arg(1))) {
+    $node = node_load(arg(1));
+    if ($node && $node->type == 'alfresco_item') {
+      return $node->cm_name;
+    }
+  }
+  return $arg;
+}
+
+// ------------------------------------------------------------------
+// Form hooks
+// ------------------------------------------------------------------
+
+/**
+ * Implementation of hook_form().
+ *
+ * @see alfresco_form_validate
+ * @see alfresco_form_submit
+ */
+function alfresco_form(&$node, $form_state) {
+
+  // Informamos al usuario que no tiene acceso al repositorio de Alfresco
+  if (!($repository_access = alfresco_repository_access())) {
+    drupal_set_message(t('No tiene acceso al repositorio de Alfresco. Por favor contacte con el administrador del sitio para más información.'), 'warning');
+  }
+
+  //drupal_add_js(drupal_get_path('module', 'alfresco') .'/alfresco.js');
+
+  // The site admin can decide if this node type has a title and body, and how
+  // the fields should be labeled. We need to load these settings so we can
+  // build the node form correctly.
+  $type = node_get_types('type', $node);
+
+  $form['reference'] = array(
+    '#type' => 'textfield',
+    '#title' => $type->name,
+    '#description' => t('Specify the fully-qualified Alfresco node reference, i.e. of the form "workspace://SpacesStore/uuid"'),
+    '#default_value' => isset($node->reference) ? $node->reference : '',
+    '#required' => TRUE,
+    '#weight' => -6,
+  );
+
+  // @todo: mover al módulo alfresco_browser con form_alter
+  if ($repository_access && module_exists('alfresco_browser')) {
+    $form['reference']['#type'] = 'alfresco_browser';
+    $form['reference']['#description'] = t('Select an item from Alfresco repository.');
+  }
+
+  if ($type->has_title) {
+    $form['title'] = array(
+      '#type' => 'textfield',
+      '#title' => check_plain($type->title_label),
+      '#description' => t('Optionally specify a title. If left blank, the Alfresco item\'s title will be used.'),
+      '#required' => FALSE,
+      '#default_value' => $node->title,
+      '#maxlength' => 255,
+      '#weight' => -5,
+      '#prefix' => '<div id="alfresco-edit-title-wrapper">',
+      '#suffix' => '</div>',
+    );
+  }
+
+  if ($type->has_body) {
+    $form['body_field'] = node_body_field($node, $type->body_label, $type->min_word_count);
+  }
+
+  $form['#validate'][] = 'alfresco_form_validate';
+  $form['#submit'][] = 'alfresco_form_submit';
+
+  return $form;
+}
+
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ */
+function alfresco_form_search_form_alter(&$form, &$form_state) {
+  alfresco_include('search');
+  alfresco_search_form_alter(&$form, &$form_state);
+}
+
+// ------------------------------------------------------------------
+// Validate node hooks
+// ------------------------------------------------------------------
+
+/**
+ * Valida que la referencia al nodo de alfresco es correcta, comprueba que el nodo existe y obtiene el título.
+ *
+ * @see alfresco_form_submit
+ * @see http://drupal.org/node/144132#passing
+ */
+function alfresco_form_validate($form, &$form_state) {
+
+  if ($form_state['values']['reference']) {
+    $reference = $form_state['values']['reference'];
+
+    if (!alfresco_valid_reference($reference)) {
+      form_set_error('reference', t('The alfresco node reference is not valid.'));
+    }
+    else {
+      // Load node from alfresco repository.
+      alfresco_include('soap');
+      $alf_node = alfresco_soap_node_load($reference);
+      if ($alf_node) {
+        $form_state['alf_node'] = $alf_node;
+      }
+      else {
+        // Alfresco node not found.
+        $nid = $form_state['values']['nid'];
+        if ($nid) {
+          // Node edit
+          $url_edit = url('node/'. $nid .'/edit', array('fragment' => 'edit-reference-wrapper'));
+          $url_delete = url('node/'. $nid .'/delete');
+
+          form_set_error('reference',
+            t('The node is not found in the repository. <a href="@url_edit">Edit Alfresco node reference</a> or <a href="@url_delete">delete this node</a>.',
+              array('@url_edit' => $url_edit, '@url_delete' => $url_delete)));
+
+          watchdog('alfresco', 'The node is not found in the repository.', NULL, WATCHDOG_NOTICE, l('view', 'node/'. $nid));
+        }
+        else {
+          // Node new
+          form_set_error('reference', t('The node is not found in the repository.'));
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implementation of hook_validate().
+ */
+function alfresco_validate($node, &$form) {
+
+  //drupal_add_js(drupal_get_path('module', 'alfresco') .'/alfresco.js');
+
+  if (!empty($node->reference)) {
+    if ($nid = alfresco_exists_node($node->reference, $node->nid)) {
+      form_set_error('reference', t('This Alfresco node already exists in your Drupal site. [<a href="!url">View</a>]',
+        array('!url' => url('node/'. $nid))));
+    }
+  }
+}
+
+// ------------------------------------------------------------------
+// Submit node functions
+// ------------------------------------------------------------------
+
+/**
+ * Submit handler for node.
+ */
+function alfresco_form_submit($form, &$form_state) {
+
+  if (isset($form_state['alf_node'])) {
+    $alf_node = $form_state['alf_node'];
+
+    $properties = _alfresco_map($alf_node);
+    if ($properties) {
+      foreach ($properties as $key => $value) {
+        $form_state['values'][$key] = $value;
+      }
+
+      if (empty($form_state['values']['title'])) {
+        $title = !empty($properties['cm_title']) ? $properties['cm_title'] : $properties['cm_name'];
+        $form_state['values']['title'] = $title;
+      }
+    }
+
+    unset($form_state['alf_node']);
+  }
+}
+
+// -----------------------------------------------------------------------
+// Database functions
+// -----------------------------------------------------------------------
+
+/**
+ * Implementation of hook_insert().
+ */
+function alfresco_insert($node) {
+  _alfresco_save($node);
+}
+
+/**
+ * Implementation of hook_update().
+ *
+ * As an existing node is being updated in the database, we need to do our own
+ * database updates.
+ */
+function alfresco_update($node) {
+  _alfresco_save($node);
+}
+
+/**
+ * Save an alfresco node in database.
+ */
+function _alfresco_save($node) {
+
+  // if this is a new node or we're adding a new revision
+  if ($node->is_new || !empty($node->revision)) {
+    drupal_write_record('alfresco_node', $node);
+  }
+  else {
+    drupal_write_record('alfresco_node', $node, 'vid');
+  }
+
+  if (isset($node->cm_content)) {
+    $content = $node->cm_content;
+    $content['vid'] = $node->vid;
+    $content['nid'] = $node->nid;
+
+    // @see http://drupal.org/update/modules/6/7#select_count
+    if (db_result(db_query_range('SELECT 1 FROM {alfresco_content} WHERE vid = %d', $node->vid, 0, 1))) {
+      drupal_write_record('alfresco_content', $content, 'vid');
+    }
+    else {
+      drupal_write_record('alfresco_content', $content);
+    }
+  }
+  else {
+    db_query('DELETE FROM {alfresco_content} WHERE vid = %d', $node->vid);
+  }
+}
+
+/**
+ * Return an array of node properties from alfresco repository.
+ *
+ * @todo: Add documentation.
+ * @param $node
+ *  Alfresco node.
+ *
+ * @return
+ */
+function _alfresco_map($node) {
+
+  $properties = array();
+  $properties['cm_name'] = truncate_utf8($node->cm_name, 255);
+  $properties['cm_title'] = truncate_utf8($node->cm_title, 255);
+  $properties['cm_description'] = $node->cm_description;
+  $properties['cm_author'] = truncate_utf8($node->cm_author, 255);
+  $properties['cm_creator'] = truncate_utf8($node->cm_creator, 255);
+  $properties['cm_modifier'] = truncate_utf8($node->cm_modifier, 255);
+  $properties['cm_created'] = strtotime($node->cm_created);
+  $properties['cm_modified'] = strtotime($node->cm_modified);
+
+  $content = $node->cm_content;
+  if ($content instanceof AlfContentData) {
+    $properties['cm_content'] = array();
+    $properties['cm_content']['url'] = $content->guestUrl;
+    $properties['cm_content']['mimetype'] = $content->mimetype;
+    $properties['cm_content']['size'] = $content->size;
+    $properties['cm_content']['encoding'] = $content->encoding;
+  }
+  else {
+    $properties['cm_content'] = NULL;
+  }
+
+  return $properties;
+}
+
+
+/**
+ * Implementation of hook_nodeapi().
+ *
+ * When a node revision is deleted, we need to remove the corresponding record
+ * from our table. The only way to handle revision deletion is by implementing
+ * hook_nodeapi().
+ */
+function alfresco_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+
+  switch ($op) {
+    case 'delete revision':
+      db_query('DELETE FROM {alfresco_node} WHERE vid = %d', $node->vid);
+      db_query('DELETE FROM {alfresco_content} WHERE vid = %d', $node->vid);
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_delete().
+ *
+ * When a node is deleted, we need to remove all related records from out table.
+ */
+function alfresco_delete($node) {
+
+  // Notice that we're matching all revision, by using the node's nid.
+  db_query('DELETE FROM {alfresco_node} WHERE nid = %d', $node->nid);
+  db_query('DELETE FROM {alfresco_content} WHERE nid = %d', $node->nid);
+
+  // clean up statistics table when node is deleted
+  db_query('DELETE FROM {alfresco_counter} WHERE nid = %d', $node->nid);
+}
+
+/**
+ * Implementation of hook_load().
+ *
+ * Now that we've defined how to manage the node data in the database, we
+ * need to tell Drupal how to get the node back out. This hook is called
+ * every time a node is loaded, and allows us to do some loading of our own.
+ */
+function alfresco_load($node) {
+
+  $fields = drupal_schema_fields_sql('alfresco_node');
+  $fields = array_diff($fields, array('vid', 'nid'));
+  $fields = implode(', ', $fields);
+
+  $sql = "SELECT $fields FROM {alfresco_node} WHERE vid = %d";
+  $alfresco_node = db_fetch_object(db_query($sql, $node->vid));
+
+  $fields = drupal_schema_fields_sql('alfresco_content');
+  $fields = array_diff($fields, array('vid', 'nid'));
+  $fields = implode(', ', $fields);
+
+  $sql = "SELECT $fields FROM {alfresco_content} WHERE vid = %d";
+  $content_data = db_fetch_array(db_query($sql, $node->vid));
+  if ($content_data) {
+    $alfresco_node->is_file = TRUE;
+    $alfresco_node->cm_content = $content_data;
+  }
+
+  return $alfresco_node;
+}
+
+// -----------------------------------------------------------------------
+// View functions
+// -----------------------------------------------------------------------
+
+/**
+ * Implementation of hook_view().
+ *
+ * This is a typical implementation that simply runs the node text through
+ * the output filters.
+ */
+function alfresco_view($node, $teaser = FALSE, $page = FALSE) {
+  drupal_add_css(drupal_get_path('module', 'alfresco') .'/alfresco.css');
+
+  $node = node_prepare($node, $teaser);
+  if ($teaser) {
+    $node->content['alfresco_info'] = array(
+      '#value'  => theme('alfresco_teaser', $node),
+      '#weight' => 0,
+    );
+  }
+  else {
+    $node->content['alfresco_info'] = array(
+      '#value'  => theme('alfresco_display', $node),
+      '#weight' => -1,
+    );
+  }
+  return $node;
+}
+
+/**
+ * Implementation of hook_link().
+ */
+function alfresco_link($type, $node = NULL, $teaser = FALSE) {
+  $links = array();
+  if ($type == 'node' && $node->type == 'alfresco_item' && $node->cm_content) {
+    if (user_access('view alfresco download counter')) {
+      $totalcount = db_result(db_query('SELECT totalcount FROM {alfresco_counter} WHERE nid = %d', $node->nid));
+      if ($totalcount) {
+        $links['alfresco_statistics_counter'] = array(
+          'title' => format_plural($totalcount, '1 download', '@count downloads')
+        );
+      }
+    }
+    if (user_access('download alfresco content')) {
+      $links['alfresco_download'] = array(
+        'title' => t('Download content'),
+        'href' => alfresco_url_download($node),
+        'attributes' => array('title' => t('Download, or open in browser window, the content of this item.')),
+      );
+    }
+  }
+  return $links;
+}
+
+// ------------------------------------------------------------------
+// 3rd party module hooks
+// ------------------------------------------------------------------
+
+/**
+ * Implementation of hook_views_api().
+ */
+function alfresco_views_api() {
+  return array(
+    'api' => '2.0',
+    'path' => drupal_get_path('module', 'alfresco') .'/views',
+  );
+}
+
+/**
+ * Implementation of hook_admin_theme().
+ */
+function alfresco_admin_theme($op = 'info', $option = NULL) {
+  switch ($op) {
+    case 'info':
+      $options = array();
+      $options['alfresco'] = array(
+        'title' => t('Alfresco pages'),
+        'description' => t('Use the administration theme when viewing pages of the Alfresco module (upload, import...).'),
+      );
+      return $options;
+
+    case 'check':
+      switch ($option) {
+        case 'alfresco':
+          return arg(0) == 'alfresco';
+      }
+      break;
+  }
+}
+
+// ------------------------------------------------------------------
+// Cron hooks
+// ------------------------------------------------------------------
+
+/**
+ * Implementation of hook_cron().
+ */
+function alfresco_cron() {
+  // @todo: Add sync
+
+  $statistics_timestamp = variable_get('alfresco_statistics_day_timestamp', '');
+
+  if ((time() - $statistics_timestamp) >= 86400) {
+    // Reset day counts.
+    db_query('UPDATE {alfresco_counter} SET daycount = 0');
+    variable_set('alfresco_statistics_day_timestamp', time());
+  }
+
+  // @see alfresco_requirements()
+  variable_set('alfresco_http_request_fails', FALSE);
+}
+
+// ------------------------------------------------------------------
+// Theme hooks
+// ------------------------------------------------------------------
+
+/**
+ * Implementation of hook_theme()
+ */
+function alfresco_theme() {
+
+  return array(
+    'alfresco_properties_table' => array(
+      'arguments' => array('form' => NULL),
+      'file' => 'alfresco.theme.inc',
+    ),
+    'alfresco_teaser' => array(
+      'arguments' => array('node' => NULL),
+      'file' => 'alfresco.theme.inc',
+    ),
+    'alfresco_display' => array(
+      'arguments' => array('node' => NULL),
+      'file' => 'alfresco.theme.inc',
+    ),
+  );
+}
+
+// ------------------------------------------------------------------
+// Files helper functions
+// ------------------------------------------------------------------
+
+/**
+ * Return the URL for download the alfresco file.
+ */
+function alfresco_url_download($node) {
+
+  if ($node && $node->type == 'alfresco_item' && !empty($node->cm_content)) {
+    return 'node/'. $node->nid .'/download/'. $node->cm_name;
+  }
+}
+
+/**
+ * Transfer file using http to client. Pipes a file through Alfresco to the client.
+ *
+ * @param $reference
+ *  A string containing an Alfresco Node Reference.
+ *
+ * @param $disposition
+ *  The Content-Disposition Header. Possible values: 'attachment' or 'inline'.
+ *
+ * @see file_transfer()
+ * @see http://w-shadow.com/blog/2007/08/12/how-to-force-file-download-with-php/
+ * @see http://www.phpclasses.org/browse/file/9051.html
+ * @see http://www.php-mysql-tutorial.com/php-tutorial/php-read-remote-file.php
+ * @see http://htmlblog.net/10-code-snippets-for-php-developers/
+ * @see http://www.faqts.com/knowledge_base/view.phtml/aid/1/fid/40 - Which is faster, echo or print?
+ */
+function alfresco_file_transfer($reference, $disposition = NULL) {
+  if (ob_get_level()) {
+    ob_end_clean();
+  }
+
+  alfresco_include('soap');
+  $alf_node = alfresco_soap_node_load($reference);
+  if (!$alf_node) {
+    drupal_not_found();
+    exit();
+  }
+
+  $content = $alf_node->cm_content;
+  if (!($content instanceof AlfContentData)) {
+    drupal_not_found();
+    exit();
+  }
+
+  $name = $alf_node->cm_name;
+  $url  = $content->url;
+  $size = $content->size;
+  $mime = $content->mimetype;
+
+  drupal_set_header('Content-Type: '. $mime);
+  drupal_set_header('Content-Length: '. $size);
+
+  if ($disposition == 'attachment' || $disposition == 'inline') {
+    drupal_set_header('Content-Disposition: '. $disposition .'; filename="' . $name . '"');
+  }
+
+  // Transfer file in 1024 byte chunks to save memory usage.
+  if ($fd = fopen($url, 'rb')) {
+    while (!feof($fd)) {
+      echo fread($fd, 1024);
+    }
+    fclose($fd);
+  }
+  else {
+    drupal_not_found();
+  }
+  exit();
+}
+
+/**
+ * Uploads a file into content store and returns the content data string which
+ * can be used to populate a content property.
+ *
+ * @see drupal_http_request()
+ * @see http://wiki.alfresco.com/wiki/URL_Addressability#UploadContentServlet
+ */
+function alfresco_file_put($filepath, $url, $headers = array()) {
+  $result = new stdClass();
+
+  if (!file_exists($filepath)) {
+    $result->error = 'file not found';
+    return $result;
+  }
+
+  // Parse the URL and make sure we can handle the schema.
+  $uri = parse_url($url);
+
+  if ($uri == FALSE) {
+    $result->error = 'unable to parse URL';
+    return $result;
+  }
+
+  if (!isset($uri['scheme'])) {
+    $result->error = 'missing schema';
+    return $result;
+  }
+
+  switch ($uri['scheme']) {
+    case 'http':
+      $port = isset($uri['port']) ? $uri['port'] : 80;
+      $host = $uri['host'] . ($port != 80 ? ':'. $port : '');
+      $fp = @fsockopen($uri['host'], $port, $errno, $errstr, 15);
+      break;
+    case 'https':
+      // Note: Only works for PHP 4.3 compiled with OpenSSL.
+      $port = isset($uri['port']) ? $uri['port'] : 443;
+      $host = $uri['host'] . ($port != 443 ? ':'. $port : '');
+      $fp = @fsockopen('ssl://'. $uri['host'], $port, $errno, $errstr, 20);
+      break;
+    default:
+      $result->error = 'invalid schema '. $uri['scheme'];
+      return $result;
+  }
+
+  // Make sure the socket opened properly.
+  if (!$fp) {
+    // When a network error occurs, we use a negative number so it does not
+    // clash with the HTTP status codes.
+    $result->code = -$errno;
+    $result->error = trim($errstr);
+    return $result;
+  }
+
+  // Construct the path to act on.
+  $path = isset($uri['path']) ? $uri['path'] : '/';
+  if (isset($uri['query'])) {
+    $path .= '?'. $uri['query'];
+  }
+
+  // Create HTTP request.
+  $defaults = array(
+    'Host' => "Host: $host",
+    'User-Agent' => 'User-Agent: Drupal (+http://drupal.org/)',
+  );
+
+  $content_length = filesize($filepath);
+  if ($content_length > 0) {
+    $defaults['Content-Length'] = 'Content-Length: '. $content_length;
+  }
+
+  // If the server url has a user then attempt to use basic authentication
+  if (isset($uri['user'])) {
+    $defaults['Authorization'] = 'Authorization: Basic '. base64_encode($uri['user'] . (!empty($uri['pass']) ? ":". $uri['pass'] : ''));
+  }
+
+  foreach ($headers as $header => $value) {
+    $defaults[$header] = $header .': '. $value;
+  }
+
+  $request = 'PUT '. $path ." HTTP/1.0\r\n";
+  $request .= implode("\r\n", $defaults);
+  $request .= "\r\n\r\n";
+
+  $result->request = $request;
+
+  fwrite($fp, $request);
+
+  // Transfer file in 1024 byte chunks to save memory usage.
+  if ($fd = fopen($filepath, 'rb')) {
+    while (!feof($fd) && $chunk = fread($fd, 1024)) {
+      fwrite($fp, $chunk, strlen($chunk));
+    }
+    fclose($fd);
+  }
+
+  // Fetch response.
+  $response = '';
+  while (!feof($fp) && $chunk = fread($fp, 1024)) {
+    $response .= $chunk;
+  }
+  fclose($fp);
+
+  // Parse response.
+  list($split, $result->data) = explode("\r\n\r\n", $response, 2);
+  $split = preg_split("/\r\n|\n|\r/", $split);
+
+  list($protocol, $code, $text) = explode(' ', trim(array_shift($split)), 3);
+  $result->headers = array();
+
+  // Parse headers.
+  while ($line = trim(array_shift($split))) {
+    list($header, $value) = explode(':', $line, 2);
+    if (isset($result->headers[$header]) && $header == 'Set-Cookie') {
+      // RFC 2109: the Set-Cookie response header comprises the token Set-
+      // Cookie:, followed by a comma-separated list of one or more cookies.
+      $result->headers[$header] .= ','. trim($value);
+    }
+    else {
+      $result->headers[$header] = trim($value);
+    }
+  }
+
+  $result->code = $code;
+  return $result;
+}
+
+// ------------------------------------------------------------------
+// Utils helper functions
+// ------------------------------------------------------------------
+
+/**
+ * @todo Hacer un hook para este método.
+ */
+function alfresco_auth_credentials() {
+  global $user;
+
+  // @todo: tratar el caso especial del administrador de forma independiente ?
+
+  $verified = isset($_SESSION['alfresco_account']['verified']) ? $_SESSION['alfresco_account']['verified'] : FALSE;
+
+  // Las credenciales de conexión dependen del modo de autenticación configurado en el portal
+  if (alfresco_auth_is_sso() && $user->uid != 0 && $verified) {
+    $username = $_SESSION['alfresco_account']['username'];
+    $password = $_SESSION['alfresco_account']['password'];
+  }
+  else {
+    $username = variable_get('alfresco_credentials_username', 'guest');
+    $password = variable_get('alfresco_credentials_password', base64_encode('guest'));
+  }
+
+  return array('user' => $username, 'pass' => base64_decode($password));
+}
+
+function alfresco_auth_is_global() {
+  return variable_get('alfresco_authentication_method', ALFRESCO_AUTH_GLOBAL) == ALFRESCO_AUTH_GLOBAL;
+}
+
+function alfresco_auth_is_sso() {
+  return variable_get('alfresco_authentication_method', ALFRESCO_AUTH_GLOBAL) == ALFRESCO_AUTH_SSO;
+}
+
+function alfresco_valid_uuid($uuid) {
+  $pattern = '|^'. ALFRESCO_REGEX_NODE_UUID .'$|';
+  return preg_match($pattern, $uuid);
+}
+
+/**
+ * Verify the syntax of the given Alfresco node reference.
+ *
+ * @param $reference
+ *   A string containing an Alfresco Node Reference.
+ * @return
+ *   TRUE if the reference is in a valid format.
+ *
+ * Examples of valid references:
+ * - "workspace://SpacesStore/804005fd-0a68-11df-a238-b1a1e5d9b300"
+ * - "system://system/1aa150d5-bc5e-11dd-8590-695888b0c20c"
+ */
+function alfresco_valid_reference($reference) {
+  $pattern = '|^\w+://\w+/'. ALFRESCO_REGEX_NODE_UUID .'$|';
+  return preg_match($pattern, $reference);
+}
+
+/**
+ * Verify the syntax of the given Alfresco node path.
+ *
+ * Examples of valid paths:
+ * - "/"
+ * - "/app:company_home"
+ * - "/app:company_home/app:guest_home"
+ * - "/app:company_home/app:guest_home/cm:alfresco.pdf"
+ * - "/sys:user"
+ */
+function alfresco_valid_path($path) {
+  $pattern = '|^(/\w+:.+)+$|';
+  return preg_match($pattern, $path);
+}
+
+/**
+ * Parse a given Alfresco Node Reference.
+ *
+ * @param $reference
+ *   A string containing an Alfresco Node Reference.
+ * @return
+ *   FALSE, if the reference is in an invalid format. Otherwise, a
+ *   keyed array containing the components:
+ *    'reference' - Reference (same)
+ *    'scheme'    - Scheme.
+ *    'address'   - Address.
+ *    'uuid'      - UUID.
+ *   If the component parameter is specified a string is returned
+ *   instead of an array.
+ */
+function alfresco_parse_reference($reference, $component = '') {
+  $pattern = '|^(\w+)://(\w+)/('. ALFRESCO_REGEX_NODE_UUID .')$|';
+  if (preg_match($pattern, $reference, $matches)) {
+    $info = array();
+    $info['reference'] = $matches[0];
+    $info['scheme'] = $matches[1];
+    $info['address'] = $matches[2];
+    $info['uuid'] = $matches[3];
+    if (!empty($component)) {
+      return $info[$component];
+    }
+    return $info;
+  }
+  return FALSE;
+}
+
+/**
+ * Checks whether the alfresco_item node specified by reference exists.
+ *
+ * @param $reference
+ *   A string containing an Alfresco Node Reference.
+ * @param $exclude
+ *   An optional Node ID (nid) to be excluded.
+ * @return
+ *  Returns Node ID (nid) if the alfresco_item node specified by reference
+ *  exists; FALSE otherwise.
+ */
+function alfresco_exists_node($reference, $exclude = NULL) {
+
+  if (!empty($exclude)) {
+    $sql = "SELECT nid FROM {alfresco_node} WHERE reference = '%s' AND nid <> %d";
+    if ($nid = db_result(db_query($sql, $reference, $exclude))) {
+      return $nid;
+    }
+  }
+  else {
+    $sql = "SELECT nid FROM {alfresco_node} WHERE reference = '%s'";
+    if ($nid = db_result(db_query($sql, $reference))) {
+      return $nid;
+    }
+  }
+  return FALSE;
+}
+
+/**
+ * Create an alfresco_item node from a reference.
+ *
+ * @param $reference
+ *   String Alfresco Node Reference.
+ * @param $title
+ *   String to be used as the node's title. If this is ommitted the title of
+ *   Alfresco item will be used.
+ * @param $body
+ *   String to be used as the node's body.
+ * @param $options
+ *   An associative array of additional options, with the following keys:
+ *     - 'name'
+ *       Authored by field. Leave blank to use the current user.
+ *     - 'date'
+ *       Authored on field. Leave blank to use the current time.
+ *     - 'status'
+ *       Published field.
+ *     - 'promote'
+ *       Promoted to front page field.
+ *     - 'sticky'
+ *       Sticky at top of lists field.
+ *     - 'language'
+ *       Language code if the locale.module is installed.
+ *     - 'comment'
+ *       Comment settings if the comment.module is installed.
+ *     - 'taxonomy'
+ *       Taxonomy terms to assign to the node if the taxonomy.module is
+ *       installed.
+ * @return
+ *   A node object if the node is created successfully or FALSE on error.
+ *
+ * @see http://www.darrenmothersele.com/content/programmatically-creating-drupal-nodes
+ * @see http://acquia.com/blog/migrating-drupal-way-part-i-creating-node
+ * @see http://drupal.org/node/293663
+ * @see http://drupal.org/node/178506#comment-895418
+ * @see image_create_node_from()
+ * @see drupal_execute()
+ */
+function alfresco_create_node($reference, $title = '', $body = '', $options = array()) {
+  global $user;
+
+  if (!user_access('create alfresco content')) {
+    return FALSE;
+  }
+
+  // Ensure it's a valid alfresco node referente
+  if (!alfresco_valid_reference($reference)) {
+    return FALSE;
+  }
+
+  if (alfresco_exists_node($reference)) {
+    return FALSE;
+  }
+
+  alfresco_include('soap');
+  $alf_node = alfresco_soap_node_load($reference);
+  if (!$alf_node) {
+    return FALSE;
+  }
+
+  // Build the alfresco_item node
+  $node = new stdClass();
+  $node->type  = 'alfresco_item';
+  $node->name  = $user->name;
+  $node->title = truncate_utf8($title, 255);
+  $node->body  = $body;
+
+  // Set the node's defaults
+  module_load_include('inc', 'node', 'node.pages');
+  node_object_prepare($node);
+
+  // Node author information and options for administrators
+  if (user_access('administer nodes')) {
+    foreach (array('name', 'date', 'status', 'promote', 'sticky') as $key) {
+      if (isset($options[$key])) {
+        $node->$key = $options[$key];
+      }
+    }
+  }
+
+  // Locale settings
+  if (module_exists('locale')) {
+    if (isset($options['language'])) {
+      $node->language = $options['language'];
+    }
+    else {
+      global $language;
+      $node->language = $language->language;
+    }
+  }
+
+  // Taxonomy
+  if (module_exists('taxonomy') && isset($options['taxonomy'])) {
+    $node->taxonomy = $options['taxonomy'];
+  }
+
+  // Comment
+  if (module_exists('comment') && isset($options['comment'])) {
+    $node->comment = $options['comment'];
+  }
+
+  // Alfresco node stuff
+  $node->reference = $reference;
+
+  // Execute mappings from $alf_node to $node.
+  $properties = _alfresco_map($alf_node);
+  if ($properties) {
+    foreach ($properties as $key => $value) {
+      $node->$key = $value;
+    }
+  }
+
+  if (empty($title) && isset($node->cm_title)) {
+    $node->title = truncate_utf8($node->cm_title, 255);
+  }
+
+  // Save the node.
+  $node = node_submit($node);
+  node_save($node);
+
+  return $node;
+}
+
+/**
+ * Implementation of hook_user().
+ */
+function alfresco_user($op, &$edit, &$account, $category = NULL) {
+  alfresco_include('user');
+
+  switch ($op) {
+    case 'categories':
+      return array(
+        array(
+          'name' => 'alfresco',
+          'title' => 'Alfresco',
+          'weight' => 3,
+          'access callback' => 'alfresco_account_access',
+          'access arguments' => array(1),
+        ),
+      );
+      break;
+
+    case 'login':
+      // The user just logged in.
+      alfresco_user_login($edit);
+      break;
+
+    case 'logout':
+      // The user just logged out.
+      alfresco_user_logout();
+      break;
+
+    case 'view':
+      // The user's account information is being displayed.
+      //alfresco_user_view($account);
+      break;
+
+    case 'insert':
+      // The user account is being added.
+      alfresco_user_insert($edit, $account);
+      break;
+
+    case 'update':
+      // The user account is being changed.
+      //alfresco_user_update($edit, $account);
+      break;
+
+    case 'delete':
+      // The user account is being deleted.
+      //alfresco_user_delete($account);
+      break;
+
+    case 'register':
+      // The user account registration form is about to be displayed.
+      return alfresco_user_form($edit, $account, $category);
+
+    case 'form':
+      // The user account edit form is about to be displayed.
+      return alfresco_user_form($edit, $account, $category);
+
+    case 'validate':
+      // The user account edit form is about to be displayed.
+      alfresco_user_validate($edit, $account, $category);
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_search().
+ */
+function alfresco_search($op = 'search', $keys = NULL) {
+  if (!user_access('search alfresco repository')) {
+    return;
+  }
+
+  alfresco_include('search');
+
+  switch ($op) {
+    case 'name':
+      return alfresco_search_name();
+
+    case 'search':
+      return alfresco_search_search($keys);
+  }
+}
+
+/**
+ * Utility for handling Alfresco SOAP faults.
+ */
+function alfresco_error_handler($type, $exception = NULL, $skip_message = FALSE) {
+
+  if ($exception instanceof SoapFault) {
+    // Obtenemos el mensaje de error de Alfresco
+    if (isset($exception->detail) && is_object($exception->detail)) {
+      $detail = (array) $exception->detail;
+      unset($detail['stackTrace']);
+      unset($detail['trace']);
+      $detail_msg = print_r($detail, TRUE);
+      $error_class = array_shift(array_values($detail));
+      $error_msg = array_pop(explode(':', array_shift(explode("\n", $error_class->message))));
+    }
+    else {
+      $detail_msg = print_r($exception, TRUE);
+      $error_msg = $exception->getMessage();
+    }
+  }
+  else {
+    $error_msg = $detail_msg = $exception->getMessage();
+  }
+
+  watchdog($type, 'An unexpected error occurred while connecting to the Alfresco repository via SOAP. Detail: <pre>!detail</pre>', array('!detail' => $detail_msg), WATCHDOG_ERROR);
+  if (!$skip_message) {
+    drupal_set_message(t('An unexpected error occurred while connecting to the Alfresco repository. Please contact the server administrator for assistance.'), 'error', FALSE);
+  }
+
+  return $error_msg;
+}
+
+
+/**
+ * Include alfresco .inc files as necessary.
+ */
+function alfresco_include($file) {
+  static $used = array();
+  if (!isset($used[$file])) {
+    require_once './' . drupal_get_path('module', 'alfresco') . "/includes/alfresco.$file.inc";
+  }
+
+  $used[$file] = TRUE;
+}
+
+/**
+ * Include alfresco library .php files as necessary.
+ */
+function alfresco_include_lib($file, $path = 'Alfresco/Service') {
+  static $used = array();
+  if (empty($used)) {
+    // Add the Alfresco PHP library directory to include path
+    $lib_path = drupal_get_path('module', 'alfresco') .'/lib';
+    set_include_path(get_include_path() . PATH_SEPARATOR . $lib_path);
+  }
+
+  $filepath = $path .'/'. $file;
+  if (!isset($used[$filepath])) {
+    require_once "$filepath.php";
+  }
+
+  $used[$filepath] = TRUE;
+}
+
+function alfresco_get_icon_filetype($filename, $only_name = FALSE) {
+  $extension = substr(strrchr($filename, '.'), 1);
+
+  $module_path = drupal_get_path('module', 'alfresco');
+  $image = file_exists("./$module_path/images/filetypes/$extension.gif") ? $extension : '_default';
+
+  return $only_name ? $image : "$module_path/images/filetypes/$image.gif";
+}

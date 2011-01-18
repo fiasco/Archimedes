@@ -1,0 +1,86 @@
+<?php
+// $Id: alfresco_attach.install,v 1.2.2.2 2010/04/26 12:33:02 xergius Exp $
+
+/**
+ * @file
+ * Install and configure Alfresco attach module.
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function alfresco_attach_install() {
+  drupal_install_schema('alfresco_attach');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function alfresco_attach_uninstall() {
+  drupal_uninstall_schema('alfresco_attach');
+
+  // Delete variables.
+  db_query("DELETE FROM {variable} WHERE name LIKE 'alfresco_attach_%%'");
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function alfresco_attach_schema() {
+
+  $schema['alfresco_attach'] = array(
+    'description' => t('Stores attached alfresco item information and table associations.'),
+    'fields' => array(
+      'aid' => array(
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+        'description' => t('Primary Key: The {alfresco_node}.nid.'),
+      ),
+      'vid' => array(
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+        'description' => t('Primary Key: The {node}.vid associated with the attached alfresco item.'),
+      ),
+      'nid' => array(
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+        'description' => t('The {node}.nid associated with the attached alfresco item.'),
+      ),
+      'description' => array(
+        'type'        => 'varchar',
+        'length'      => 255,
+        'not null'    => TRUE,
+        'default'     => '',
+        'description' => t('Description of the attached alfresco item.'),
+      ),
+      'list' => array(
+        'type'        => 'int',
+        'unsigned'    => TRUE,
+        'not null'    => TRUE,
+        'default'     => 0,
+        'size'        => 'tiny',
+        'description' => t('Whether the alfresco item should be visibly listed on the node: yes(1) or no(0).'),
+      ),
+      'weight' => array(
+        'type'        => 'int',
+        'not null'    => TRUE,
+        'default'     => 0,
+        'size'        => 'tiny',
+        'description' => t('Weight of this attached alfresco item in relation to other attached in this node.'),
+      ),
+    ),
+    'primary key' => array('aid', 'vid'),
+    'indexes' => array(
+      'aid' => array('aid'),
+      'nid' => array('nid'),
+    ),
+  );
+
+  return $schema;
+}

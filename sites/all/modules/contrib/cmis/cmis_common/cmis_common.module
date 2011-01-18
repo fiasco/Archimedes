@@ -1,0 +1,112 @@
+<?php 
+// $Id: cmis_common.module,v 1.1.2.10 2010/03/08 20:30:25 cbalan Exp $
+
+/**
+ * Implementation of hook_cmis_info()
+ * 
+ */
+function cmis_common_cmis_info() {
+  return array(
+    'cmis_common' => array(
+      'name' => t('CMIS Common '),
+      'module' => 'cmis_common',
+      'description' => t('CMIS common client')
+    )
+  );
+}
+
+/**
+ * Implementation of hook_cmisapi_invoke().
+ * 
+ */
+function cmis_common_cmisapi_invoke() {
+  $args = func_get_args();
+  $cmis_method = $args[0];
+  $repository_id = $args[1];
+
+  unset($args[0]);
+  unset($args[1]);
+
+  $cmis_repository = cmis_get_repository($repository_id);
+  
+  // pass repository info from cache 
+  if ($cmis_method == 'getRepositoryInfo' && isset($cmis_repository->info)) {
+    return $cmis_repository->info;
+  }
+  
+  // cache service instance
+  if (!isset($cmis_repository->service)) {
+    module_load_include('utils.inc', 'cmis_common');
+    
+    // CommonCMISService allows other modules to control the way CMISService class
+    // calls the CMIS repositories via hook_cmis_service()
+    $cmis_repository->service = new CommonCMISService($cmis_repository->settings['url'],
+                                                      $cmis_repository->settings['user'],
+                                                      $cmis_repository->settings['password']);
+  }
+  
+  return call_user_func_array(array($cmis_repository->service, $cmis_method), $args);
+}
+
+/**
+ * Implementation of hook_cmis_service($url, $properties, $settings)
+ *
+ */
+function cmis_common_cmis_service($url, $properties, $settings, $dry_run = FALSE) {
+  $session = curl_init($url);
+
+  curl_setopt($session, CURLOPT_HEADER, false);
+  curl_setopt($session, CURLOPT_RETURNTRANSFER, true);
+  if ($settings['user']) {
+    curl_setopt($session, CURLOPT_USERPWD, $settings['user'] . ":" . $settings['password']);
+  }
+  
+  curl_setopt($session, CURLOPT_CUSTOMREQUEST, $properties['method']);
+  
+  if ($properties['headers']) {
+    $headers = array();
+    foreach($properties['headers'] as $header_name => $header_value) {
+      $headers[] = $header_name .': '. $header_value;
+    }    
+    curl_setopt($session, CURLOPT_HTTPHEADER, $headers);
+  }
+  
+  if ($properties['data']) {
+    curl_setopt($session, CURLOPT_POSTFIELDS, $properties['data']);
+  }
+  
+  if ($properties['method'] == "POST") {
+    curl_setopt($session, CURLOPT_POST, true);
+  }
+  
+  $retval = new stdClass();
+  $retval->url = $url;
+  $retval->method = $properties['method'];
+  $retval->content_sent = $properties['data'];
+  $retval->content_type_sent = $properties['headers']['Content-Type'];
+  
+  if (!$dry_run) {
+    $retval->body = curl_exec($session);
+    $retval->code = curl_getinfo($session, CURLINFO_HTTP_CODE);
+    $retval->content_type = curl_getinfo($session, CURLINFO_CONTENT_TYPE);
+    $retval->content_length = curl_getinfo($session, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+    curl_close($session);
+    
+    if (!in_array($retval->code, array(200,201,204))) {
+      throw new CMISException(t("HTTP call to [@url] returned [@code]. Response: @response", array(
+        '@code' => $retval->code,
+        '@response' => $retval->body,
+        '@url' => $url
+      )));
+    }
+  }
+  else {
+    $retval->body = NULL;
+    $retval->curl_session = $session;
+    $retval->code = 0;
+    $retval->content_type = NULL;
+    $retval->content_length = NULL;
+  }
+
+  return $retval;
+}

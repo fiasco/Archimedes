@@ -1,0 +1,156 @@
+<?php
+// $Id: tabs.module,v 1.27 2010/01/18 08:11:21 nedjo Exp $
+
+/**
+ * @file
+ * API for creating tabbed pages.
+ *
+ * See the file tabsexample.module, included in the dev release, for usage examples.
+ */
+
+/**
+ * Implementation of hook_menu().
+ */
+function tabs_menu() {
+  $items = array();
+
+  $items['admin/settings/tabs'] = array(
+    'title' => 'Tabs',
+    'description' => 'Configuration for tabs',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tabs_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+    'file' => 'tabs.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_theme()
+ */
+function tabs_theme() {
+  return array(
+    'tabset' => array(
+      'arguments' => array('element' => NULL),
+      'file' => 'tabs.theme.inc',
+    ),
+    'tabpage' => array(
+      'arguments' => array('element' => NULL),
+      'file' => 'tabs.theme.inc',
+    ),
+  );
+}
+
+/**
+ * Process a tabset prior to rendering.
+ */
+function tabs_pre_render_tabset($element) {
+  tabs_load();
+  // Assign a name, reading from the first parent (the key of this tabset element).
+  $name = $element['#tabset_name'] = form_clean_id(isset($element['#tabset_name']) && $element['#tabset_name'] ? $element['#tabset_name'] : (isset($element['#parents']) && count($element['#parents']) ? $element['#parents'][0] : 'tabset'));
+
+  // Add class.
+  if (!isset($element['#attributes'])) {
+    $element['#attributes'] = array();
+  }
+  $element['#attributes']['class'] = (isset($element['#attributes']['class']) ? $element['#attributes']['class'] .' ' : '') .'drupal-tabs js-hide'. (isset($element['#tabs_navigation']) && $element['#tabs_navigation'] ? ' tabs-navigation' : '');
+
+  $children = element_children($element);
+
+  foreach ($children as $index => $key) {
+    if (isset($element[$key]['#type']) && $element[$key]['#type'] == 'tabpage') {
+      if (!isset($element[$key]['#content'])) {
+        $element[$key]['#content'] = '';
+      }
+      if (isset($element[$key]['#description']) && $element[$key]['#description']) {
+        $element[$key]['#content'] = '<div class="description">'. $element[$key]['#description'] .'</div>' . $element[$key]['#content'];
+        unset($element[$key]['#description']);
+      }
+      $is_ajax = isset($element[$key]['#ajax_url']) && $element[$key]['#ajax_url'];
+      // Unset any empty tabs.
+      $content = trim($element[$key]['#content']);
+      if (!$is_ajax && empty($content) && !element_children($element[$key])) {
+        unset($element[$key]);
+        continue;
+      }
+      $element[$key]['#tabset_name'] = $element['#tabset_name'];
+
+      // If no tab_name is set and we use descriptive titles, use one.
+      if ((!isset($element[$key]['#tab_name']) || empty($element[$key]['#tab_name'])) && variable_get('tabs_descriptive_urls', 0)) {
+        // Clean out invalid characters.
+        $clean_title = preg_replace('/[^\sa-zA-Z0-9\ ]+/ ', ' ', $element[$key]['#title']);
+        $element[$key]['#tab_name'] = strtolower($clean_title);
+      }
+      // If the tab_name is still empty, set one.
+      if (!isset($element[$key]['#tab_name']) || empty($element[$key]['#tab_name'])) {
+        $element[$key]['#tab_name'] = $element['#tabset_name'] . '-tab-' . $index;
+      }
+      $element[$key]['#tab_name'] = form_clean_id($element[$key]['#tab_name']);
+      if (!isset($element[$key]['#attributes'])) {
+        $element[$key]['#attributes'] = array();
+      }
+      // If we are loading via AJAX we need to add a title attribute and set the url to the AJAX path.
+      if ($is_ajax) {
+        $element[$key]['#attributes']['#title'] =  $element[$key]['#tab_name'];
+        $element[$key]['#url'] = $element[$key]['#ajax_url'];
+      }
+      // Otherwise we use a hash.
+      else {
+        $element[$key]['#url'] = '#' .  $element[$key]['#tab_name'];
+      }
+      $element[$key]['#attributes']['class'] = (isset($element[$key]['#attributes']['class']) ? $element[$key]['#attributes']['class'] . ' ' : '') . $element[$key]['#tab_name'];
+      // Add the ui-tabs-selected class if this tab is selected.
+      if (isset($element[$key]['#selected']) && $element[$key]['#selected']) {
+        $element[$key]['#attributes']['class'] .= ' ui-tabs-selected';
+      }
+      $element[$key]['#index'] = $index;
+    }
+  }
+  return $element;
+}
+
+/**
+ * Add required js and css files.
+ */
+function tabs_load() {
+  static $loaded = FALSE;
+
+  if (!$loaded) {
+    $tabs_speed = variable_get('tabs_speed', 'fast');
+    if (is_numeric($tabs_speed)) {
+      $tabs_speed = (int) $tabs_speed;
+    }
+    $path = drupal_get_path('module', 'tabs');
+    // TODO: make this a dependency in D7.
+    if (module_exists('jquery_ui')) {
+      jquery_ui_add(array('ui.tabs'));
+    }
+    else {
+      drupal_add_js($path . '/ui.core.js');
+      drupal_add_js($path . '/ui.tabs.js');
+    }
+
+    drupal_add_js($path . '/tabs.js');
+    drupal_add_js(array('tabs' => array('slide' => (bool) variable_get('tabs_slide', 0), 'fade' => (bool) variable_get('tabs_fade', 0), 'speed' => $tabs_speed, 'auto_height' => (bool) variable_get('tabs_auto_height', 0), 'next_text' => variable_get('tabs_nav_next', t('next')), 'previous_text' => variable_get('tabs_nav_prev', t('previous')), 'navigation_titles' => variable_get('tabs_navigation_titles', 0))), 'setting');
+    drupal_add_css($path . '/drupal-tabs.css');
+    $loaded = TRUE;
+  }
+}
+
+/**
+ * Render a tabset 'manually' (when not rendering as part of a regular form render).
+ */
+function tabs_render($form) {
+  return drupal_render($form);
+}
+
+/**
+ * Implementation of hook_elements().
+ */
+function tabs_elements() {
+  $type = array();
+  $type['tabset'] = array('#tabs_navigation' => variable_get('tabs_navigation', 0) ? TRUE : FALSE, '#pre_render' => array('tabs_pre_render_tabset'));
+  $type['tabpage'] = array('#content' => '');
+  return $type;
+}

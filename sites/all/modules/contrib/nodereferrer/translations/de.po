@@ -1,0 +1,227 @@
+# $Id: de.po,v 1.1.2.2 2009/10/29 18:04:00 andypost Exp $
+#
+# German translation of Drupal (general)
+# Copyright 2009 Miro Dietiker <miro DOT dietiker AT md-systems DOT ch>
+# Generated from files:
+#  nodereferrer.module,v 1.17 2009/03/05 04:28:52 andypost
+#  nodereferrer.info,v 1.2 2009/01/18 21:12:10 dopry
+#  nodereferrer.views.inc,v 1.1 2009/03/05 03:51:08 andypost
+#  views/nodereferrer_view_handler_argument.inc: n/a
+#  views/nodereferrer_view_handler_filter.inc: n/a
+#  views/nodereferrer_view_handler_field.inc: n/a
+#  views/nodereferrer_view_handler_argument_field.inc: n/a
+#  views/nodereferrer_view_handler_field_field.inc: n/a
+#  views/nodereferrer_view_handler_filter_field.inc: n/a
+#  views/nodereferrer_view_handler_relationship_referers.inc: n/a
+#  views/nodereferrer_view_handler_argument_type.inc: n/a
+#  views/nodereferrer_view_handler_field_type.inc: n/a
+#  views/nodereferrer_view_handler_filter_type.inc: n/a
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: German translation for drupal Nodereferrer module\n"
+"POT-Creation-Date: 2009-03-25 17:40+0100\n"
+"PO-Revision-Date: 2009-10-29 12:57+0100\n"
+"Last-Translator: Niels Hackius\n"
+"Language-Team: Miro Dietiker, MD Systems <miro DOT dietiker AT md-systems DOT ch>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n>1);\n"
+"X-Poedit-Language: German\n"
+"X-Poedit-Country: SWITZERLAND\n"
+
+#: nodereferrer.module:20
+msgid "<strong>CCK:</strong> Defines a field type for displaying referrers to a node. <em>Note: Requires content.module.</em>"
+msgstr "<strong>CCK :</strong> Definiert ein Feld, welches Rückreferenzen zu einem Node erlaubt.<em>Hinweis: content.module wird benötigt.</em>"
+
+#: nodereferrer.module:29
+msgid "Node Referrers"
+msgstr "Node Rückreferenz"
+
+#: nodereferrer.module:56
+msgid "Referring Node Types"
+msgstr "Rückreferenzierende Node Typen"
+
+#: nodereferrer.module:65
+msgid "Referring Fields"
+msgstr "Referenzierende Felder"
+
+#: nodereferrer.module:74
+msgid "Show on translations"
+msgstr "Darstellen in Übersetzungen"
+
+#: nodereferrer.module:75
+msgid "If this is checked, referrers will also show on translations of the referenced node"
+msgstr "Wenn ausgewählt, erscheinen Rück-Referenzen auch auf Übersetzungen des referenzierten Nodes."
+
+#: nodereferrer.module:82
+msgid "Referrers Per Page"
+msgstr "Rückreferenzen pro Seite"
+
+#: nodereferrer.module:83
+msgid "Referring nodes to display per page. 0 for no paging."
+msgstr "Anzahl referenzierender Nodes pro Seite. 0 deaktiviert Seitenumbruch."
+
+#: nodereferrer.module:89
+msgid "Pager element"
+msgstr "Element für Seitenumbruch"
+
+#: nodereferrer.module:90
+msgid "Use this to avoid clashes if you have several pagers on one page"
+msgstr "Zu verwenden um Konflikte mit mehreren mehrseitigen Elementen pro Seite zu verhindern"
+
+#: nodereferrer.module:96
+msgid "Refferer Sort Order"
+msgstr "Rückreferenz Sortierung"
+
+#: nodereferrer.module:98
+msgid "Chronological Order"
+msgstr "Chronologische Sortierung"
+
+#: nodereferrer.module:99
+msgid "Reverse Chronological Order"
+msgstr "Umgekehrte chronologische Sortierung"
+
+#: nodereferrer.module:100
+msgid "Title Order"
+msgstr "Titel-Sortierung"
+
+#: nodereferrer.module:101
+msgid "Reverse Title Order"
+msgstr "Umgekehrte Titel-Sortierung"
+
+#: nodereferrer.module:314
+msgid "Read-Only List"
+msgstr "Nur lesbare Liste"
+
+#: nodereferrer.module:0
+msgid "nodereferrer"
+msgstr "nodereferrer"
+
+#: nodereferrer.info:0
+msgid "Node Referrer"
+msgstr "Node Rückreferenz"
+
+#: nodereferrer.info:0
+msgid "provides a counter part to CCK's nodereference field."
+msgstr "bietet ein Gegenstück zu CCKs nodereference Feld"
+
+#: nodereferrer.info:0
+msgid "CCK"
+msgstr "CCK"
+
+#: views/nodereferrer.views.inc:6;22
+msgid "Node"
+msgstr "Node"
+
+#: views/nodereferrer.views.inc:7
+msgid "Nodereferrer: by field"
+msgstr "Node Rückreferenz: über ein Feld"
+
+#: views/nodereferrer.views.inc:9
+msgid "Allows views to query the node's references by a certain node reference field."
+msgstr "Erlaubt views die Referenzen eines bestimmten Feldes abzufragen."
+
+#: views/nodereferrer.views.inc:23
+msgid "Nodereferrer: by node type"
+msgstr "Node Rückreferenz: nach Node Typen"
+
+#: views/nodereferrer.views.inc:25
+msgid "Allows views to query the node's references by a certain node type."
+msgstr "Erlaubt views die Referenzen eines bestimmten Nodetypen abzufragen"
+
+#: views/nodereferrer_view_handler_argument.inc:19
+#: views/nodereferrer_view_handler_filter.inc:19
+msgid "Operator"
+msgstr "Operator"
+
+#: views/nodereferrer_view_handler_argument.inc:22
+msgid "Return nodes that refer to given node id"
+msgstr "Nodes zurückgeben, welche auf die gegebene Node-ID verweisen"
+
+#: views/nodereferrer_view_handler_argument.inc:23
+msgid "Do not return nodes that do not refer to given node id"
+msgstr "Keine Nodes darstellen, die nicht zur aktuellen Node-ID referenzieren"
+
+#: views/nodereferrer_view_handler_argument.inc:33
+#: views/nodereferrer_view_handler_field.inc:41
+#: views/nodereferrer_view_handler_filter.inc:41
+msgid "This is optional ; if nothing is selected then all referrers will be returned"
+msgstr "Optional; Ohne Auswahl werden alle Rück-Referenzen zurückgegeben"
+
+#: views/nodereferrer_view_handler_argument.inc:42
+#: views/nodereferrer_view_handler_field.inc:50
+#: views/nodereferrer_view_handler_filter.inc:50
+msgid "Multilingual options"
+msgstr "Mehrsprachige Optionen"
+
+#: views/nodereferrer_view_handler_argument.inc:51
+#: views/nodereferrer_view_handler_field.inc:59
+#: views/nodereferrer_view_handler_filter.inc:59
+msgid "Include referrers of translations"
+msgstr "Rück-Referenzen von Übersetzungen einschliessen"
+
+#: views/nodereferrer_view_handler_argument.inc:52
+#: views/nodereferrer_view_handler_field.inc:60
+#: views/nodereferrer_view_handler_filter.inc:60
+msgid "If this is checked, will also include nodes that refer to translations of the given node"
+msgstr "Wenn ausgewählt, werden auch Nodes ausgegeben, welche auf Übersetzungen des gegebenen Nodes verweisen"
+
+#: views/nodereferrer_view_handler_argument.inc:62
+#: views/nodereferrer_view_handler_field.inc:70
+#: views/nodereferrer_view_handler_filter.inc:70
+msgid "Include translations of referrers"
+msgstr "Übersetzungen von Rück-Referenzen einschliessen"
+
+#: views/nodereferrer_view_handler_argument.inc:63
+#: views/nodereferrer_view_handler_field.inc:71
+#: views/nodereferrer_view_handler_filter.inc:71
+msgid "If this is checked, will also include translations of nodes that refer to the given node. You may not need this if you synchronise your CCK field."
+msgstr "Wenn ausgewählt, werden auch Übersetzungen von Nodes ausgegeben, welche auf den gegebenen Node verweisen. Wird nicht benötigt, wenn das CCK-Feld synchronisiert wird."
+
+#: views/nodereferrer_view_handler_argument_field.inc:9
+#: views/nodereferrer_view_handler_field_field.inc:9
+#: views/nodereferrer_view_handler_filter_field.inc:9
+#: views/nodereferrer_view_handler_relationship_referers.inc:17
+msgid "Using field"
+msgstr "Feld verwenden"
+
+#: views/nodereferrer_view_handler_argument_type.inc:9
+#: views/nodereferrer_view_handler_field_type.inc:9
+#: views/nodereferrer_view_handler_filter_type.inc:9
+msgid "From node type"
+msgstr "Nodetyp"
+
+#: views/nodereferrer_view_handler_field.inc:21
+msgid "Formatter"
+msgstr "Formatierer"
+
+#: views/nodereferrer_view_handler_field.inc:23
+msgid "Select the formatter to use to display the fields"
+msgstr "Formatierer für Feld-Darstellung auswählen"
+
+#: views/nodereferrer_view_handler_field.inc:30
+msgid "Display as"
+msgstr "Darstellen als"
+
+#: views/nodereferrer_view_handler_field.inc:32
+msgid "Select how multiple values should be displayed"
+msgstr "Anzahl Darstellungswerte auswählen"
+
+#: views/nodereferrer_view_handler_filter.inc:22
+msgid "Return nodes that refer to:"
+msgstr "Auf folgendes verweisende Nodes zurückgeben:"
+
+#: views/nodereferrer_view_handler_filter.inc:23
+msgid "Do not return nodes that refer to:"
+msgstr "Nodes ausschliessen welche auf folgendes verweisen:"
+
+#: views/nodereferrer_view_handler_filter.inc:30
+msgid "Node id"
+msgstr "Node-ID"
+
+#: views/nodereferrer_view_handler_filter.inc:32
+msgid "The node id referrers of which will be included/excluded by this filter"
+msgstr "Die Node-ID auf welche Referenzen ein-/ausgeschlossen werden durch diesen Filter"
+

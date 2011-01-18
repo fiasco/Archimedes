@@ -1,0 +1,15 @@
+; $Id: panels_tabs.info,v 1.1.2.3.2.2 2010/09/10 12:25:34 smoothify Exp $
+name = Tabs panel style
+description = Configurable 'tabs' panel style. Provides 3 kinds of tabs.
+package = "Panels style plugins"
+dependencies[] = panels
+dependencies[] = tabs
+core = 6.x
+
+
+; Information added by drupal.org packaging script on 2010-10-02
+version = "6.x-1.0-rc6"
+core = "6.x"
+project = "panels_tabs"
+datestamp = "1286015464"
+
