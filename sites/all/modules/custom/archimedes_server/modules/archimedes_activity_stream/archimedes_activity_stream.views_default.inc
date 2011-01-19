@@ -41,6 +41,7 @@ function archimedes_activity_stream_views_default_views() {
       'empty' => '',
       'hide_empty' => 0,
       'empty_zero' => 0,
+      'imagecache_preset' => 'avatarMini',
       'exclude' => 0,
       'id' => 'picture',
       'table' => 'users',

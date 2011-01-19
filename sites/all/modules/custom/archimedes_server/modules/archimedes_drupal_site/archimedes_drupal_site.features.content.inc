@@ -268,6 +268,61 @@ Production',
     ),
   );
 
+  // Exported field: field_directory_hash
+  $fields['drupal-field_directory_hash'] = array(
+    'field_name' => 'field_directory_hash',
+    'type_name' => 'drupal',
+    'display_settings' => array(
+      'label' => array(
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '2' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '3' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'token' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'text',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'text',
+    'active' => '1',
+    'text_processing' => '',
+    'max_length' => '',
+    'allowed_values' => '',
+    'allowed_values_php' => '',
+    'widget' => array(
+      'rows' => NULL,
+      'size' => NULL,
+      'label' => 'Directory Hash',
+      'weight' => '53',
+      'description' => '',
+      'type' => 'text_textfield',
+      'module' => 'text',
+    ),
+  );
+
   // Exported field: field_drupal_mod
   $fields['drupal-field_drupal_mod'] = array(
     'field_name' => 'field_drupal_mod',
@@ -1671,6 +1726,7 @@ Production',
   t('Database Name');
   t('Database Size');
   t('Debian Package');
+  t('Directory Hash');
   t('Environment');
   t('Git Hash');
   t('Git Repositories');

@@ -207,6 +207,7 @@ function archimedes_drupal_site_strongarm() {
     'comment_settings' => '32',
     'menu' => '27',
     'taxonomy' => '26',
+    'path' => '30',
   );
 
   $export['content_extra_weights_drupal'] = $strongarm;
