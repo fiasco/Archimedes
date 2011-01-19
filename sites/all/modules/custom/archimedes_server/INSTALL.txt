@@ -2,8 +2,18 @@
 
 * The python-webkit2png library.
 
+* The following pacakges:
+
+    libqt4-webkit
+    pythonqt4
+    xvfb (for servers not running x)
+
 
 -- INSTALLATION --
+
+* Download and install the required packages. On Debian/Ubuntu you can use the following line:
+
+    apt-get install libqt4-webkit pythonqt4 xvfb
 
 * Copy the archimedes server module directory to your sites/all/modules directory, so it
   is located in sites/all/modules/archimedes_server.
