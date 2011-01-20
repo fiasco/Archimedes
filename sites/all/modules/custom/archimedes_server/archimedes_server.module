@@ -356,6 +356,8 @@ function archimedes_server_block($op = 'list', $delta = 0, $edit = array()) {
     $block = array();
     $block[0]['info'] = t('Storage Overview');
     $block[1]['info'] = t('Administer Monitored Site');
+    $block[2]['info'] = t('Host Total Usage');
+    $block[3]['info'] = t('Host Usage by Site');
     return $block;
   } elseif ($op == 'view') {
 
@@ -429,7 +431,94 @@ function archimedes_server_block($op = 'list', $delta = 0, $edit = array()) {
             }
           }
         }
-      break;
+        break;
+      case 2:
+        if(arg(0) == 'node' && is_numeric(arg(1)) && ! arg(2)) {
+          $host = node_load(arg(1));
+
+          $total = (int)$host->field_disk_space[0]['value'] * 1024 * 1024;
+
+          $used = 0;
+          $data = nodereferrer_referrers(arg(1),array('field_webserver', 'field_dbhost'));
+
+          foreach($data as $ref_node) {
+            $node = node_load($ref_node['nid'],null,TRUE);
+            if ($ref_node['referrers']['field_webserver']) {
+              $used += (int) $node->field_sitesize[0]['value'];
+              $used += (int) $node->field_sitedata[0]['value'];
+            }
+            if ($ref_node['referrers']['field_webserver']) {
+              $used += (int) $node->field_db_size[0]['value'];
+            } 
+          }
+          
+          $canvas = charts_graphs_get_graph('google-charts');
+          
+          $canvas->title = "Total Usage";
+          $canvas->type = "pie";
+          $canvas->width = 550;
+          $canvas->height = 300;
+          $canvas->series = array(
+            'Used Space' => array($used, $total - $used),
+            'Free Space' => array(1)
+          );
+ 
+          $canvas->x_labels = array(archimedes_server_format_bytes($used), archimedes_server_format_bytes($total - $used));
+
+          $subject = t('Total Usage');
+          $content = $canvas->get_chart();
+        }
+        break;
+      case 3:
+        if(arg(0) == 'node' && is_numeric(arg(1)) && ! arg(2)) {
+          $host = node_load(arg(1));
+          
+          $used = array();
+          $data = nodereferrer_referrers(arg(1),array('field_webserver', 'field_dbhost'));
+          
+          foreach($data as $ref_node) {
+            $node = node_load($ref_node['nid'],null,TRUE);
+            $used[$ref_node['nid']] = array();
+            $used[$ref_node['nid']]['usage'] = 0;
+            $used[$ref_node['nid']]['title'] = $ref_node['title'];
+            if ($ref_node['referrers']['field_webserver']) {
+              $used[$ref_node['nid']]['usage'] += (int) $node->field_sitesize[0]['value'];
+              $used[$ref_node['nid']]['usage'] += (int) $node->field_sitedata[0]['value'];
+            }
+            if ($ref_node['referrers']['field_webserver']) {
+              $used[$ref_node['nid']]['usage'] += (int) $node->field_db_size[0]['value'];
+            } 
+          }
+          
+          $canvas = charts_graphs_get_graph('google-charts');
+          
+          $canvas->title = "Usage by Site";
+          $canvas->type = "pie";
+          $canvas->width = 550;
+          $canvas->height = 300;
+          
+          //Rearrange data because charts_graphs module is strange
+          $sizes = $labels = $series = array();
+          foreach($used as $site) {
+            $sizes[] = $site['usage'];
+            $labels[] = archimedes_server_format_bytes($site['usage']);
+          }
+          foreach($used as $site) {
+            // Allow for unlikely senario where sites have the same name
+            while(isset($series[$site['title']])) {
+              $site['title'] = $site['title'] . '\'';
+            }
+            $series[$site['title']] = $sizes;
+          }
+          $canvas->series = $series;
+          
+ 
+          $canvas->x_labels = $labels;
+
+          $subject = t('Usage by Site');
+          $content = $canvas->get_chart();
+        }
+        break;
     }
     // Generate our block content
     $block['subject'] = $subject;
@@ -444,6 +533,17 @@ function archimedes_server_format_bytes($size) {
     $units = array(' B', ' KB', ' MB', ' GB', ' TB');
     for ($i = 0; $size >= 1024 && $i < 4; $i++) $size /= 1024;
     return round($size, 2).$units[$i];
+}
+
+/**
+ * Find information of data usage for given host
+ */
+function archimedes_server_host_data($nid) {
+  $data = array();
+  
+  
+  
+  
 }
 
 /**

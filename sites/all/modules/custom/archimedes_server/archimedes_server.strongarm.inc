@@ -137,12 +137,13 @@ function archimedes_server_strongarm() {
   $strongarm->name = 'content_extra_weights_host';
   $strongarm->value = array(
     'title' => '-5',
-    'body_field' => '0',
-    'revision_information' => '20',
-    'author' => '20',
-    'options' => '25',
-    'comment_settings' => '30',
-    'menu' => '-2',
+    'body_field' => '-3',
+    'revision_information' => '-1',
+    'author' => '-2',
+    'options' => '0',
+    'comment_settings' => '2',
+    'menu' => '-4',
+    'path' => '1',
   );
 
   $export['content_extra_weights_host'] = $strongarm;
