@@ -436,7 +436,7 @@ function archimedes_server_block($op = 'list', $delta = 0, $edit = array()) {
         if(arg(0) == 'node' && is_numeric(arg(1)) && ! arg(2)) {
           $host = node_load(arg(1));
 
-          $total = (int)$host->field_disk_space[0]['value'] * 1024 * 1024;
+          $total = ($host->field_disk_space[0]['value'] ? (int)$host->field_disk_space[0]['value'] * 1024 * 1024 : 0);
 
           $used = 0;
           $data = nodereferrer_referrers(arg(1),array('field_webserver', 'field_dbhost'));
@@ -459,7 +459,7 @@ function archimedes_server_block($op = 'list', $delta = 0, $edit = array()) {
           $canvas->width = 550;
           $canvas->height = 300;
           $canvas->series = array(
-            'Used Space' => array($used, $total - $used),
+            'Used Space' => array($used, ($total > $used ? $total - $used : 0)),
             'Free Space' => array(1)
           );
  
@@ -485,7 +485,7 @@ function archimedes_server_block($op = 'list', $delta = 0, $edit = array()) {
               $used[$ref_node['nid']]['usage'] += (int) $node->field_sitesize[0]['value'];
               $used[$ref_node['nid']]['usage'] += (int) $node->field_sitedata[0]['value'];
             }
-            if ($ref_node['referrers']['field_webserver']) {
+            if ($ref_node['referrers']['field_dbhost']) {
               $used[$ref_node['nid']]['usage'] += (int) $node->field_db_size[0]['value'];
             } 
           }

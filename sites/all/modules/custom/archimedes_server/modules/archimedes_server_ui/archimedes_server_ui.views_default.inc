@@ -605,69 +605,6 @@ function archimedes_server_ui_views_default_views() {
       'relationship' => 'none',
     ),
   ));
-  $handler->override_option('arguments', array(
-    'field_dbhost_nid' => array(
-      'default_action' => 'ignore',
-      'style_plugin' => 'default_summary',
-      'style_options' => array(),
-      'wildcard' => 'all',
-      'wildcard_substitution' => 'All',
-      'title' => '',
-      'breadcrumb' => '',
-      'default_argument_type' => 'fixed',
-      'default_argument' => '',
-      'validate_type' => 'none',
-      'validate_fail' => 'not found',
-      'break_phrase' => 0,
-      'not' => 0,
-      'id' => 'field_dbhost_nid',
-      'table' => 'node_data_field_dbhost',
-      'field' => 'field_dbhost_nid',
-      'validate_user_argument_type' => 'uid',
-      'validate_user_roles' => array(
-        '2' => 0,
-        '3' => 0,
-        '5' => 0,
-        '6' => 0,
-        '4' => 0,
-        '7' => 0,
-        '8' => 0,
-      ),
-      'override' => array(
-        'button' => 'Override',
-      ),
-      'relationship' => 'none',
-      'default_options_div_prefix' => '',
-      'default_argument_fixed' => '',
-      'default_argument_user' => 0,
-      'default_argument_php' => '',
-      'validate_argument_node_type' => array(
-        'alfresco_item' => 0,
-        'host' => 0,
-        'sla' => 0,
-        'action' => 0,
-        'drupal' => 0,
-        'drupal_module' => 0,
-        'drupal_theme' => 0,
-        'moodle' => 0,
-        'moodle_module' => 0,
-        'panel' => 0,
-        'page' => 0,
-        'story' => 0,
-      ),
-      'validate_argument_node_access' => 0,
-      'validate_argument_nid_type' => 'nid',
-      'validate_argument_vocabulary' => array(
-        '2' => 0,
-        '3' => 0,
-        '1' => 0,
-      ),
-      'validate_argument_type' => 'tid',
-      'validate_argument_transform' => 0,
-      'validate_user_restrict_roles' => 0,
-      'validate_argument_php' => '',
-    ),
-  ));
   $handler->override_option('filters', array(
     'type' => array(
       'operator' => 'in',
@@ -717,9 +654,79 @@ function archimedes_server_ui_views_default_views() {
     'name' => 'navigation',
   ));
   $handler = $view->new_display('block', 'Host Sites', 'block_1');
+  $handler->override_option('arguments', array(
+    'field_webserver_nid' => array(
+      'default_action' => 'ignore',
+      'style_plugin' => 'default_summary',
+      'style_options' => array(),
+      'wildcard' => 'all',
+      'wildcard_substitution' => 'All',
+      'title' => '',
+      'breadcrumb' => '',
+      'default_argument_type' => 'fixed',
+      'default_argument' => '',
+      'validate_type' => 'none',
+      'validate_fail' => 'not found',
+      'break_phrase' => 0,
+      'not' => 0,
+      'id' => 'field_webserver_nid',
+      'table' => 'node_data_field_webserver',
+      'field' => 'field_webserver_nid',
+      'validate_user_argument_type' => 'uid',
+      'validate_user_roles' => array(
+        '2' => 0,
+        '3' => 0,
+        '5' => 0,
+        '6' => 0,
+        '4' => 0,
+        '7' => 0,
+        '8' => 0,
+      ),
+      'override' => array(
+        'button' => 'Use default',
+      ),
+      'relationship' => 'none',
+      'default_options_div_prefix' => '',
+      'default_argument_fixed' => '',
+      'default_argument_user' => 0,
+      'default_argument_php' => '',
+      'validate_argument_node_type' => array(
+        'alfresco_item' => 0,
+        'host' => 0,
+        'sla' => 0,
+        'action' => 0,
+        'drupal' => 0,
+        'drupal_module' => 0,
+        'drupal_theme' => 0,
+        'moodle' => 0,
+        'moodle_module' => 0,
+        'panel' => 0,
+        'page' => 0,
+        'story' => 0,
+      ),
+      'validate_argument_node_access' => 0,
+      'validate_argument_nid_type' => 'nid',
+      'validate_argument_vocabulary' => array(
+        '2' => 0,
+        '3' => 0,
+        '1' => 0,
+      ),
+      'validate_argument_type' => 'tid',
+      'validate_argument_transform' => 0,
+      'validate_user_restrict_roles' => 0,
+      'validate_argument_php' => '',
+    ),
+  ));
   $handler->override_option('block_description', '');
   $handler->override_option('block_caching', -1);
   $handler = $view->new_display('block', 'Host DB', 'block_2');
+  $handler->override_option('arguments', array(
+    'field_dbhost_nid' => array(
+      'id' => 'field_dbhost_nid',
+      'table' => 'node_data_field_dbhost',
+      'field' => 'field_dbhost_nid',
+    ),
+  ));
   $handler->override_option('block_description', '');
   $handler->override_option('block_caching', -1);
 
