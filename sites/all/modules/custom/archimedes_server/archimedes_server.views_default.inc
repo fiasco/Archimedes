@@ -573,6 +573,268 @@ function archimedes_server_views_default_views() {
 
   $views[$view->name] = $view;
 
+  // Exported view: host_glance
+  $view = new view;
+  $view->name = 'host_glance';
+  $view->description = 'At a Glance [Host]';
+  $view->tag = '';
+  $view->view_php = '';
+  $view->base_table = 'node';
+  $view->is_cacheable = FALSE;
+  $view->api_version = 2;
+  $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+  $handler = $view->new_display('default', 'Defaults', 'default');
+  $handler->override_option('fields', array(
+    'field_host_loc_value' => array(
+      'label' => 'Location',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'link_class' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'target' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'html' => 0,
+        'strip_tags' => 0,
+      ),
+      'empty' => '',
+      'hide_empty' => 0,
+      'empty_zero' => 0,
+      'link_to_node' => 0,
+      'label_type' => 'widget',
+      'format' => 'default',
+      'multiple' => array(
+        'group' => TRUE,
+        'multiple_number' => '',
+        'multiple_from' => '',
+        'multiple_reversed' => FALSE,
+      ),
+      'exclude' => 0,
+      'id' => 'field_host_loc_value',
+      'table' => 'node_data_field_host_loc',
+      'field' => 'field_host_loc_value',
+      'relationship' => 'none',
+    ),
+    'field_disk_space_value' => array(
+      'label' => 'Maximum Disk Space',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'link_class' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'target' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'html' => 0,
+        'strip_tags' => 0,
+      ),
+      'empty' => '',
+      'hide_empty' => 0,
+      'empty_zero' => 0,
+      'link_to_node' => 0,
+      'label_type' => 'custom',
+      'format' => 'default',
+      'multiple' => array(
+        'group' => TRUE,
+        'multiple_number' => '',
+        'multiple_from' => '',
+        'multiple_reversed' => FALSE,
+      ),
+      'exclude' => 0,
+      'id' => 'field_disk_space_value',
+      'table' => 'node_data_field_disk_space',
+      'field' => 'field_disk_space_value',
+      'relationship' => 'none',
+    ),
+    'body' => array(
+      'label' => 'Description',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'link_class' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'target' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'html' => 0,
+        'strip_tags' => 0,
+      ),
+      'empty' => '',
+      'hide_empty' => 0,
+      'empty_zero' => 0,
+      'exclude' => 0,
+      'id' => 'body',
+      'table' => 'node_revisions',
+      'field' => 'body',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('arguments', array(
+    'nid' => array(
+      'default_action' => 'ignore',
+      'style_plugin' => 'default_summary',
+      'style_options' => array(),
+      'wildcard' => 'all',
+      'wildcard_substitution' => 'All',
+      'title' => '',
+      'breadcrumb' => '',
+      'default_argument_type' => 'fixed',
+      'default_argument' => '',
+      'validate_type' => 'none',
+      'validate_fail' => 'not found',
+      'break_phrase' => 0,
+      'not' => 0,
+      'id' => 'nid',
+      'table' => 'node',
+      'field' => 'nid',
+      'validate_user_argument_type' => 'uid',
+      'validate_user_roles' => array(
+        '2' => 0,
+      ),
+      'relationship' => 'none',
+      'default_options_div_prefix' => '',
+      'default_argument_fixed' => '',
+      'default_argument_user' => 0,
+      'default_argument_php' => '',
+      'validate_argument_node_type' => array(
+        'drupal' => 0,
+        'drupal_module' => 0,
+        'drupal_theme' => 0,
+        'panel' => 0,
+        'host' => 0,
+        'moodle' => 0,
+        'moodle_module' => 0,
+        'page' => 0,
+        'story' => 0,
+      ),
+      'validate_argument_node_access' => 0,
+      'validate_argument_nid_type' => 'nid',
+      'validate_argument_vocabulary' => array(
+        '1' => 0,
+      ),
+      'validate_argument_type' => 'tid',
+      'validate_argument_transform' => 0,
+      'validate_user_restrict_roles' => 0,
+      'validate_argument_php' => '',
+    ),
+  ));
+  $handler->override_option('filters', array(
+    'type' => array(
+      'operator' => 'in',
+      'value' => array(
+        'host' => 'host',
+      ),
+      'group' => '0',
+      'exposed' => FALSE,
+      'expose' => array(
+        'operator' => FALSE,
+        'label' => '',
+      ),
+      'id' => 'type',
+      'table' => 'node',
+      'field' => 'type',
+      'relationship' => 'none',
+    ),
+  ));
+  $handler->override_option('access', array(
+    'type' => 'none',
+  ));
+  $handler->override_option('cache', array(
+    'type' => 'none',
+  ));
+  $handler->override_option('title', 'At a Glance');
+  $handler->override_option('header_format', '1');
+  $handler->override_option('header_empty', 0);
+  $handler->override_option('footer_format', '1');
+  $handler->override_option('footer_empty', 0);
+  $handler->override_option('items_per_page', 1);
+  $handler->override_option('style_plugin', 'table');
+  $handler->override_option('style_options', array(
+    'grouping' => '',
+    'override' => 1,
+    'sticky' => 0,
+    'order' => 'asc',
+    'columns' => array(
+      'field_cat_env_value' => 'field_cat_env_value',
+      'field_drupal_version_value' => 'field_drupal_version_value',
+      'field_sla_nid' => 'field_sla_nid',
+      'field_deb_value' => 'field_deb_value',
+      'field_servername_url' => 'field_servername_url',
+      'field_dbhost_nid' => 'field_dbhost_nid',
+      'field_dbname_value' => 'field_dbname_value',
+      'field_webroot_value' => 'field_webroot_value',
+      'field_webserver_nid' => 'field_webserver_nid',
+      'body' => 'body',
+    ),
+    'info' => array(
+      'field_cat_env_value' => array(
+        'sortable' => 0,
+        'separator' => '',
+      ),
+      'field_drupal_version_value' => array(
+        'sortable' => 0,
+        'separator' => '',
+      ),
+      'field_sla_nid' => array(
+        'separator' => '',
+      ),
+      'field_deb_value' => array(
+        'sortable' => 0,
+        'separator' => '',
+      ),
+      'field_servername_url' => array(
+        'separator' => '',
+      ),
+      'field_dbhost_nid' => array(
+        'separator' => '',
+      ),
+      'field_dbname_value' => array(
+        'sortable' => 0,
+        'separator' => '',
+      ),
+      'field_webroot_value' => array(
+        'sortable' => 0,
+        'separator' => '',
+      ),
+      'field_webserver_nid' => array(
+        'separator' => '',
+      ),
+      'body' => array(
+        'separator' => '',
+      ),
+    ),
+    'default' => '-1',
+  ));
+  $handler->override_option('row_options', array(
+    'inline' => array(),
+    'separator' => '',
+    'hide_empty' => 1,
+  ));
+
+  $views[$view->name] = $view;
+
   // Exported view: lastupdated
   $view = new view;
   $view->name = 'lastupdated';
