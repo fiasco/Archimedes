@@ -447,7 +447,7 @@ function archimedes_server_block($op = 'list', $delta = 0, $edit = array()) {
               $used += (int) $node->field_sitesize[0]['value'];
               $used += (int) $node->field_sitedata[0]['value'];
             }
-            if ($ref_node['referrers']['field_webserver']) {
+            if ($ref_node['referrers']['field_dbhost']) {
               $used += (int) $node->field_db_size[0]['value'];
             } 
           }
@@ -504,6 +504,7 @@ function archimedes_server_block($op = 'list', $delta = 0, $edit = array()) {
             $labels[] = archimedes_server_format_bytes($site['usage']);
           }
           foreach($used as $site) {
+            $site['title'] = substr($site['title'],0,30);
             // Allow for unlikely senario where sites have the same name
             while(isset($series[$site['title']])) {
               $site['title'] = $site['title'] . '\'';
