@@ -1,3 +1,0 @@
-This directory holds modules that are unmodified from their upstream
-versions and should be able to be replaced by overwriting with a new version
-when it becomes available.
