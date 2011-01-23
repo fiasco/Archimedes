@@ -30,99 +30,93 @@ function archimedes_server_menu() {
   return $items;
 } // archimedes_server_menu()
 
-
+/**
+ * Settings form.
+ * 
+ * @TODO #7: Show a warning if archimedes_server_check_webkit() fails here.
+ */
 function archimedes_server_admin() {
-  $mail = variable_get('archimedes_mail', array('mail_server' => '','mail_port' => '110','mail_user' => ''));
-  $keys = variable_get('archimedes_keys', '');
   $form = array();
   $form['archimedes_mail'] = array(
     '#type' => 'fieldset',
     '#title' => t('POP Mail Settings'),
-    '#tree' => TRUE,
   );
-  $form['archimedes_mail']['mail_server'] = array(
+  $form['archimedes_mail']['archimedes_mail_server'] = array(
     '#type' => 'textfield',
     '#title' => t('POP Mail Server'),
-    '#default_value' => $mail['mail_server'],
+    '#default_value' => variable_get('archimedes_mail_server', ''),
     '#description' => t('Set mail server for Archimedes to get update emails.'),
   );
-  $form['archimedes_mail']['mail_port'] = array(
+  $form['archimedes_mail']['archimedes_mail_port'] = array(
     '#type' => 'textfield',
     '#title' => t('POP Mail Port'),
     '#size' => 5,
-    '#default_value' => ($mail['mail_port'] ? $mail['mail_port'] : '110'),
+    '#default_value' => variable_get('archimedes_mail_port', '110'),
     '#description' => t('Set mail server port.'),
   );
-  $form['archimedes_mail']['mail_user'] = array(
+  $form['archimedes_mail']['archimedes_mail_user'] = array(
     '#type' => 'textfield',
     '#title' => t('POP Mail Username'),
-    '#default_value' => $mail['mail_user'],
+    '#default_value' => variable_get('archimedes_mail_user', ''),
     '#description' => t('Set mail user for authentication.'),
   );
-  $form['archimedes_mail']['mail_password'] = array(
-    '#type' => 'password',
+  $form['archimedes_mail']['archimedes_mail_password'] = array(
+    '#type' => 'textfield',
     '#title' => t('POP Mail Password'),
     '#description' => t('Set mail pass for authentication. Warning: This is stored unencrypted in the database.'),
-    '#default_value' => variable_get('mail_password', ''),
+    '#default_value' => variable_get('archimedes_mail_password', ''),
   );
   $form['archimedes_keys'] = array(
     '#type' => 'fieldset',
     '#title' => t('Encryption Keys'),
-    '#tree' => TRUE,
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-
   );
-  $form['archimedes_keys']['private'] = array(
-    '#type' => 'item',
+  $form['archimedes_keys']['archimedes_key_private'] = array(
+    '#type' => 'value',
     '#title' => t('Private Key'),
-    '#value' => '<pre>' . $keys['private'] . '</pre>',
+    '#value' => t('<pre>!private_key</pre>', array('!private_key' => variable_get('archimedes_key_private', ''))),
     '#description' => t('Archimedes Server private key. Keep this secure.'),
   );
-  $form['archimedes_keys']['public'] = array(
-    '#type' => 'item',
+  $form['archimedes_keys']['archimedes_key_public'] = array(
+    '#type' => 'value',
     '#title' => t('Public Key'),
-    '#value' => '<pre>' . $keys['public'] . '</pre>',
+    '#value' => t('<pre>!public_key</pre>', array('!public_key' => variable_get('archimedes_key_public', ''))),
     '#description' => t('Archimedes Server public key. Copy this to the admin page for each Archimedes client to send encrypted emails.'),
   );
 
-  $form['#submit'] = array('archimedes_server_admin_submit');
-
   return system_settings_form($form);
-} // archimedes_server_admin()
-
-function archimedes_server_admin_submit($form, &$form_state) {
-  // ensure password is kept when left blank.
-  if ($form_state['values']['archimedes_mail']['mail_password'] == '') {
-    $mail = variable_get('archimedes_mail', array());
-    $form_state['values']['archimedes_mail']['mail_password'] = $mail['mail_password'];
-  }
 } // archimedes_server_admin()
 
 /**
  * Reads the configured inbox and builds array of attached XML
  */
 function archimedes_server_get_xml(){
-  $mail = variable_get('archimedes_mail', array());
-  $mailbox = '{' . $mail['mail_server'] . ':' . $mail['mail_port'] . '/pop3/notls}INBOX'; // add more flexibility for other email box types
-  $mbox = imap_open(imap_utf7_encode($mailbox),$mail['mail_user'],$mail['mail_password']);
+  $mail = array(
+    'server' => variable_get('archimedes_mail_server', ''),
+    'port'   => variable_get('archimedes_mail_port', '110'),
+    'user'   => variable_get('archimedes_mail_user', ''),
+    'pass'   => variable_get('archimedes_mail_pass', ''),
+  );
+  $mailbox = '{'. $mail['server'] .':'. $mail['port'] .'/pop3/notls}INBOX'; // add more flexibility for other email box types
+  $mbox = imap_open(imap_utf7_encode($mailbox), $mail['user'],$mail['pass']);
   $data = array();
   for($i = 1; $i <= imap_num_msg($mbox); $i++) {
     $struct = imap_fetchstructure($mbox, $i);
-    $keys = variable_get('archimedes_keys','');
-    $pkey = $keys['private'];
+    
+    $pkey = variable_get('archimedes_key_private', '');
     $id = 1;
     $xml = '';
     $ekey = '';
     $crypt = FALSE;
     foreach($struct->parts as $section) {
       $sect = imap_fetchbody($mbox,$i,$id);
-
+      
       if ($section->encoding == 3)     // 3 = BASE64
         $sect = base64_decode($sect);
       elseif ($section->encoding == 4) // 4 = QUOTED-PRINTABLE
         $sect = quoted_printable_decode($sect);
-
+      
       if ($section->subtype == 'XML' && $section->disposition == 'ATTACHMENT') {
         $xml = $sect;
       } elseif (substr($sect,0,5) == 'EKEY:') {
@@ -132,7 +126,7 @@ function archimedes_server_get_xml(){
       $id++;
     }
     imap_delete($mbox, $i);
-
+    
     if ($crypt) {
       $prikey = openssl_pkey_get_private($pkey);
       openssl_open($xml,$uncrypt,$ekey, $prikey);
@@ -545,8 +539,7 @@ function archimedes_server_verify_user() {
       throw new Exception($token);
     }
 
-    $keys = variable_get('archimedes_keys',array());
-    $pkey = $keys['private'];
+    $pkey = variable_get('archimedes_key_private', '');
 
     $prikey = openssl_pkey_get_private($pkey);
     openssl_open($_GET['data'],$uncrypt,$_GET['ekey'], $prikey);

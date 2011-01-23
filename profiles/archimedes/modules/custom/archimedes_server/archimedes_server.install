@@ -1,23 +1,20 @@
 <?php
 /**
-* Implementation of hook_install().
-*/
+ * Implementation of hook_install().
+ * 
+ * Create private and public encryption keys.
+ */
 function archimedes_server_install() {
-  // Create private and public encryption keys
-
   // Create and save private key
   $res = openssl_pkey_new();
 
-  // Get private key
+  // Export private key and store in $privkey.
   openssl_pkey_export($res, $privkey);
+  variable_set('archimedes_key_private', $privkey);
 
-  // Get public key
+  // Get public key.
   $pubkey = openssl_pkey_get_details($res);
-  $pubkey = $pubkey['key'];
-
-  $keys = array('private' => $privkey, 'public' => $pubkey);
-
-  variable_set('archimedes_keys',$keys);
+  variable_set('archimedes_key_public',  $pubkey['key']);
 } // archimedes_server_install()
 
 /**
@@ -46,7 +43,34 @@ function archimedes_server_requirements($phase) {
 
 
 /**
-* Implementation of hook_uninstall().
-*/
+ * Implementation of hook_uninstall().
+ */
 function archimedes_server_uninstall() {
+}
+
+/**
+ * Update 6000.
+ *
+ * Migrate archimedes_keys to archimedes_key_*.
+ * Migrate archimedes_mail to archimedes_mail_*.
+ */
+function archimedes_server_update_6000() {
+  $ret = array();
+  if ( $keys = variable_get('archimedes_keys', FALSE) && !variable_get('archimedes_key_private', FALSE) ) {
+    $keys = variable_get('archimedes_keys', array( 'private' => '', 'public' => '' ));
+    variable_set('archimedes_key_private', $keys['private']);
+    variable_set('archimedes_key_public', $keys['public']);
+    variable_del('archimedes_keys');
+    $ret[] = array('success' => TRUE, 'query' => 'Migrated Archimedes key variables.');
+  }
+  if ( variable_get('archimedes_mail', FALSE) && !variable_get('archimedes_mail_server', FALSE) ) {
+    $mail = variable_get('archimedes_mail', array('mail_server' => '', 'mail_user' => '', 'mail_password' => '', 'mail_port' => '110'));
+    variable_set('archimedes_mail_server',   $mail['server']);
+    variable_set('archimedes_mail_user',     $mail['user']);
+    variable_set('archimedes_mail_password', $mail['password']);
+    variable_set('archimedes_mail_port',     $mail['port']);
+    variable_del('archimedes_mail');
+    $ret[] = array('success' => TRUE, 'query' => 'Migrated Archimedes mail variables.');    
+  }
+  return $ret ;
 }
