@@ -70,3 +70,16 @@ function archimedes_profile_tasks(&$task, $url) {
    // Update the menu router information.
   menu_rebuild();
 }
+
+/**
+ * Implementation of hook_form_alter().
+ *
+ * Allows the profile to alter the site-configuration form. This is
+ * called through custom invocation, so $form_state is not populated.
+ */
+function archimedes_form_alter(&$form, $form_state, $form_id) {
+  if ($form_id == 'install_configure') {
+    // Set default for site name field.
+    $form['site_information']['site_name']['#default_value'] = t('Archimedes Monitoring');
+  }
+}
