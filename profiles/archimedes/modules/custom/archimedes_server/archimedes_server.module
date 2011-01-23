@@ -1,6 +1,6 @@
 <?php
 
-require dirname(__FILE__) . '/archimedes_server.features.inc';
+require_once dirname(__FILE__) . '/archimedes_server.features.inc';
 
 /**
  * Implementation of hook_perm().
@@ -63,6 +63,7 @@ function archimedes_server_admin() {
     '#type' => 'password',
     '#title' => t('POP Mail Password'),
     '#description' => t('Set mail pass for authentication. Warning: This is stored unencrypted in the database.'),
+    '#default_value' => variable_get('mail_password', ''),
   );
   $form['archimedes_keys'] = array(
     '#type' => 'fieldset',
