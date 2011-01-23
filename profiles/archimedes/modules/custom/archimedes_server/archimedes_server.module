@@ -306,20 +306,6 @@ function archimedes_server_check_webkit(){
   return is_dir(dirname(__FILE__) . '/python-webkit2png');
 }
 
-function archimedes_find_root() {
-  if (!empty($_SERVER['DOCUMENT_ROOT'])) {
-    $root = $_SERVER['DOCUMENT_ROOT'];
-  }
-  elseif (defined('DRUPAL_ROOT')) {
-    $root = DRUPAL_ROOT;
-  }
-  else {
-    $root = substr(dirname(__FILE__), 0, strpos(dirname(__FILE__), drupal_get_path('module', 'archimedes')));
-  }
-
-  return $root;
-}
-
 /**
  * Define archimedes default plugin list
  */
