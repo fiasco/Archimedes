@@ -6,9 +6,9 @@
 function archimedes_activity_stream_views_default_views() {
   $views = array();
 
-  // Exported view: catalyst_archimedes_actions
+  // Exported view: archimedes_actions
   $view = new view;
-  $view->name = 'catalyst_archimedes_actions';
+  $view->name = 'archimedes_actions';
   $view->description = '';
   $view->tag = '';
   $view->view_php = '';
