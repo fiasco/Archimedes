@@ -79,7 +79,7 @@ class ArchimedesServerPlugin_drupal_module extends ArchimedesServerPlugin_node {
     $version = $value->getAttributeNS($this->ns, $this->version_field);
     $core = substr($version,0,1) . '.x';
     $key = $project . $core;
-    if (!cache_get($key,'cache_arch_drupal')) {
+    if (!cache_get($key,'cache_archimedes_drupal')) {
       module_load_include('inc', 'update', 'update.fetch');
 
       $data = array();

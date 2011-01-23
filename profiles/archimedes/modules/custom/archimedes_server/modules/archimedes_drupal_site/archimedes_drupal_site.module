@@ -138,8 +138,8 @@ function archimedes_drupal_site_modules($node) {
  * Find module project updates
  */
 function archimedes_drupal_site_project_updates() {
-  $key = db_result(db_query("SELECT cid FROM {cache_arch_drupal} ORDER BY created ASC"));
-  $data = cache_get($key,'cache_arch_drupal');
+  $key = db_result(db_query("SELECT cid FROM {cache_archimedes_drupal} ORDER BY created ASC"));
+  $data = cache_get($key,'cache_archimedes_drupal');
   archimedes_drupal_site_archimedes_cache_set($data->data['release_url'],$key,$data->data['short_name']);
 }
 
@@ -168,7 +168,7 @@ function archimedes_drupal_site_archimedes_cache_set($url,$key,$project) {
     $available = $parser->parse($data);
     if (!empty($available) && is_array($available[$project])) {
       $available[$project]['release_url'] = $url;
-      cache_set($key,$available[$project],'cache_arch_drupal');
+      cache_set($key,$available[$project],'cache_archimedes_drupal');
       return TRUE;
     }
   }

@@ -78,7 +78,7 @@ function archimedes_drupal_site_archimedes_cache_get($module){
   $exp = explode('.', $version);
   $version = $exp[0] . '.x';
   $key = $title . $version;
-  $data = cache_get($key, 'cache_arch_drupal');
+  $data = cache_get($key, 'cache_archimedes_drupal');
   return $data;
 }
 

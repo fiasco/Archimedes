@@ -5,7 +5,7 @@
  */
 function archimedes_drupal_site_install() {
   // Create cache table.
-  drupal_install_schema('arch_drupal');
+  drupal_install_schema('archimedes_drupal_site');
 }
 
 /**
@@ -13,19 +13,27 @@ function archimedes_drupal_site_install() {
  */
 function archimedes_drupal_site_uninstall() {
   // Remove cache table.
-  drupal_uninstall_schema('update');
+  drupal_uninstall_schema('archimedes_drupal_site');
 }
 
 /**
  * Implementation of hook_schema().
  */
 function archimedes_drupal_site_schema() {
-  $schema['cache_arch_drupal'] = drupal_get_schema_unprocessed('system', 'cache');
-  $schema['cache_arch_drupal']['description'] = 'Cache table for the Archimedes Drupal Plugin module to store information about available drupal module releases, fetched from central server.';
+  $schema['cache_archimedes_drupal'] = drupal_get_schema_unprocessed('system', 'cache');
+  $schema['cache_archimedes_drupal']['description'] = 'Cache table for the Archimedes Drupal Plugin module to store information about available drupal module releases, fetched from central server.';
   return $schema;
 }
 
 function archimedes_drupal_site_update_6000() {
+  drupal_install_schema('archimedes_drupal_site');
+  return array();
+}
+
+/**
+ * Install process was wrong.
+ */
+function archimedes_drupal_site_update_6001() {
   drupal_install_schema('archimedes_drupal_site');
   return array();
 }
