@@ -206,7 +206,7 @@ function archimedes_drupal_site_default_page_manager_handlers() {
     $pane->pid = 'new-3';
     $pane->panel = 'stream';
     $pane->type = 'views';
-    $pane->subtype = 'catalyst_archimedes_actions';
+    $pane->subtype = 'archimedes_actions';
     $pane->shown = TRUE;
     $pane->access = array();
     $pane->configuration = array(
