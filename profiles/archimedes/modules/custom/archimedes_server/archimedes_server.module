@@ -32,7 +32,7 @@ function archimedes_server_menu() {
 
 
 function archimedes_server_admin() {
-  $mail = variable_get('archimedes_mail', '');
+  $mail = variable_get('archimedes_mail', array('mail_server' => '','mail_port' => '110','mail_user' => ''));
   $keys = variable_get('archimedes_keys', '');
   $form = array();
   $form['archimedes_mail'] = array(
