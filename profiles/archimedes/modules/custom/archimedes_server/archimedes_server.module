@@ -74,21 +74,20 @@ function archimedes_server_admin() {
   );
   $form['archimedes_keys'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Encryption Keys'),
+    '#title' => t('SSL Public Key'),
     '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
+    '#collapsed' => FALSE,
   );
-  $form['archimedes_keys']['archimedes_key_private'] = array(
-    '#type' => 'value',
-    '#title' => t('Private Key'),
-    '#value' => t('<pre>!private_key</pre>', array('!private_key' => variable_get('archimedes_key_private', ''))),
-    '#description' => t('Archimedes Server private key. Keep this secure.'),
-  );
+
+ // $form['archimedes_keys']['archimedes_key_private'] = array(
+ //   '#type' => 'value',
+ //   '#title' => t('Private Key'),
+ //   '#value' => t('<pre>!private_key</pre>', array('!private_key' => variable_get('archimedes_key_private', ''))),
+ //   '#description' => t('Archimedes Server private key. Keep this secure.'),
+ // );
   $form['archimedes_keys']['archimedes_key_public'] = array(
-    '#type' => 'value',
-    '#title' => t('Public Key'),
     '#value' => t('<pre>!public_key</pre>', array('!public_key' => variable_get('archimedes_key_public', ''))),
-    '#description' => t('Archimedes Server public key. Copy this to the admin page for each Archimedes client to send encrypted emails.'),
+    //'#description' => t('Archimedes Server public key. Copy this to the admin page for each Archimedes client to send encrypted emails.'),
   );
 
   $form['#validate'][] = 'archimedes_server_form_validate_inbox';
