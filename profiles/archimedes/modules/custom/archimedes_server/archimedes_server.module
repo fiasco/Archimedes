@@ -66,6 +66,12 @@ function archimedes_server_admin() {
     '#description' => t('Set mail pass for authentication. Warning: This is stored unencrypted in the database.'),
     '#default_value' => variable_get('archimedes_mail_password', ''),
   );
+  $form['archimedes_mail']['archimedes_mail_ssl'] = array(
+    '#type' => 'checkbox',
+    '#title' => 'SSL enabled',
+    '#default_value' => variable_get('archimedes_mail_ssl', FALSE),
+    '#description' => 'Check this box if the email uses pop3 over SSL',
+  );
   $form['archimedes_keys'] = array(
     '#type' => 'fieldset',
     '#title' => t('Encryption Keys'),
@@ -85,25 +91,49 @@ function archimedes_server_admin() {
     '#description' => t('Archimedes Server public key. Copy this to the admin page for each Archimedes client to send encrypted emails.'),
   );
 
+  $form['#validate'][] = 'archimedes_server_form_validate_inbox';
+
   return system_settings_form($form);
 } // archimedes_server_admin()
+
+/**
+ * Form handler for vaildating the archimedes inbox.
+ */
+function archimedes_server_form_validate_inbox($form, $form_state) {
+  $values = $form_state['values'];
+  if (!archimedes_server_open_inbox($values['archimedes_mail_server'], $values['archimedes_mail_port'], $values['archimedes_mail_user'], $values['archimedes_mail_password'], $values['archimedes_mail_ssl'])) {
+    form_set_error('archimedes_mail', t('Failed to login to email inbox with existing credentials.'));
+    return FALSE;
+  }
+}
+
+/**
+ * Open up the archimedes email inbox.
+ */
+function archimedes_server_open_inbox($server, $port, $user, $pass, $ssl = FALSE) {
+  $mailbox = strtr('{%server:%port/%path}INBOX', array(
+    '%server' => $server,
+    '%port' => $port,
+    '%path' => $ssl ? 'pop3/ssl/novalidate-cert' : 'pop3/notls',
+  ));
+  return imap_open(imap_utf7_encode($mailbox), $user, $pass);
+}
 
 /**
  * Reads the configured inbox and builds array of attached XML
  */
 function archimedes_server_get_xml(){
-  $mail = array(
-    'server' => variable_get('archimedes_mail_server', ''),
-    'port'   => variable_get('archimedes_mail_port', '110'),
-    'user'   => variable_get('archimedes_mail_user', ''),
-    'pass'   => variable_get('archimedes_mail_pass', ''),
+  $mbox = archimedes_server_open_inbox(
+    variable_get('archimedes_mail_server', ''),
+    variable_get('archimedes_mail_port', '110'),
+    variable_get('archimedes_mail_user', ''),
+    variable_get('archimedes_mail_password', ''),
+    variable_get('archimedes_mail_ssl', FALSE)
   );
-  $mailbox = '{'. $mail['server'] .':'. $mail['port'] .'/pop3/notls}INBOX'; // add more flexibility for other email box types
-  $mbox = imap_open(imap_utf7_encode($mailbox), $mail['user'],$mail['pass']);
   $data = array();
   for($i = 1; $i <= imap_num_msg($mbox); $i++) {
     $struct = imap_fetchstructure($mbox, $i);
-    
+
     $pkey = variable_get('archimedes_key_private', '');
     $id = 1;
     $xml = '';
@@ -111,12 +141,12 @@ function archimedes_server_get_xml(){
     $crypt = FALSE;
     foreach($struct->parts as $section) {
       $sect = imap_fetchbody($mbox,$i,$id);
-      
+
       if ($section->encoding == 3)     // 3 = BASE64
         $sect = base64_decode($sect);
       elseif ($section->encoding == 4) // 4 = QUOTED-PRINTABLE
         $sect = quoted_printable_decode($sect);
-      
+
       if ($section->subtype == 'XML' && $section->disposition == 'ATTACHMENT') {
         $xml = $sect;
       } elseif (substr($sect,0,5) == 'EKEY:') {
@@ -126,7 +156,7 @@ function archimedes_server_get_xml(){
       $id++;
     }
     imap_delete($mbox, $i);
-    
+
     if ($crypt) {
       $prikey = openssl_pkey_get_private($pkey);
       openssl_open($xml,$uncrypt,$ekey, $prikey);
