@@ -1,26 +1,5 @@
 <?php
 
-// Project is missing security update(s).
-define('UPDATE_NOT_SECURE', 1);
-
-// Current release has been unpublished and is no longer available.
-define('UPDATE_REVOKED', 2);
-
-// Current release is no longer supported by the project maintainer.
-define('UPDATE_NOT_SUPPORTED', 3);
-
-// Project has a new release available, but it is not a security release.
-define('UPDATE_NOT_CURRENT', 4);
-
-// Project is up to date.
-define('UPDATE_CURRENT', 5);
-
-// Project's status cannot be checked.
-define('UPDATE_NOT_CHECKED', -1);
-
-// No available update data was found for project.
-define('UPDATE_UNKNOWN', -2);
-
 /**
   * Get project information
   */
