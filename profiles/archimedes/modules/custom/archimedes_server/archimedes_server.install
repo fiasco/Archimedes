@@ -60,7 +60,7 @@ function archimedes_server_uninstall() {
  */
 function archimedes_server_update_6000() {
   $ret = array();
-  if ( $keys = variable_get('archimedes_keys', FALSE) && !variable_get('archimedes_key_private', FALSE) ) {
+  if ( variable_get('archimedes_keys', FALSE) && !variable_get('archimedes_key_private', FALSE) ) {
     $keys = variable_get('archimedes_keys', array( 'private' => '', 'public' => '' ));
     variable_set('archimedes_key_private', $keys['private']);
     variable_set('archimedes_key_public', $keys['public']);
