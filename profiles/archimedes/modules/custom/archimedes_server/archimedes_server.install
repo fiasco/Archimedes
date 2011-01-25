@@ -36,7 +36,7 @@ function archimedes_server_requirements($phase) {
     // Required library wasn't found. Show a warning.
     $requirements['archimedes_server']['title'] = $t('Archimedes Server Webkit');
     $requirements['archimedes_server']['value'] = $t('Not found');
-    $requirements['archimedes_server']['description'] = $t('The Python Webkit2png plugin is missing. Screenshots of your sites will not be taken. <a href="@download">Download</a> and extract it to your <em>archimedes_server</em> module directory.', array(
+    $requirements['archimedes_server']['description'] = $t('The Python Webkit2png plugin is missing. Screenshots of your sites will not be taken. <a href="@download">Download</a> and extract it to a folder called "python-webkit2png" in your <em>archimedes_server</em> module directory.', array(
       '@download' => 'https://github.com/AdamN/python-webkit2png/tarball/master',
     ));
     $requirements['archimedes_server']['severity'] = REQUIREMENT_WARNING;
