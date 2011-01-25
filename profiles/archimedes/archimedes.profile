@@ -30,7 +30,7 @@ function archimedes_profile_modules() {
     'strongarm',
 
     // Style
-    'pathauto', 'diff', 'admin',
+    'token', 'pathauto', 'diff', 'admin',
 
     // Features
     'features', 'archimedes_server', 'archimedes_drupal_site', 'archimedes_activity_stream',
