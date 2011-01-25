@@ -1,0 +1,38 @@
+/* $Id: drupal-6-rtl.css,v 1.1.2.5 2011/01/01 13:24:54 jarek Exp $ */
+
+#info {
+  float: right;
+  margin: 0 7px 7px 0;
+}
+#user-login-form {
+  text-align: right;
+}
+#user-login-form li.openid-link a,
+#user-login li.openid-link a {
+  padding-right: 0;
+}
+ul.tips  {
+  margin: 0 5px 0 0;
+}
+input.form-checkbox, input.form-radio {
+  margin: -1px 0 1px 4px;
+}
+html.js fieldset.collapsed legend a,
+html.js fieldset.collapsible legend a {
+  background-position: left 6px;
+}
+.block-profile .user-picture  {
+  float: right;
+  margin: 0 0 15px 15px;
+}
+.comment ul.links li {
+  margin: 0 0 0 8px;
+}
+div.messages {
+  background-position: 99% center;
+  padding: 10px 40px 10px 10px;
+}
+div.messages ul {
+  margin: 0 1em 0 0;
+}
+

@@ -1,0 +1,26 @@
+/* $Id: ie8.css,v 1.14 2010/05/31 18:41:32 jarek Exp $ */
+textarea {
+  overflow: auto;
+}
+legend {
+  margin-bottom: 15px;
+  margin-top: -20px;
+}
+select {
+  padding: 0;
+}
+html.js fieldset.collapsed legend {
+  margin-top: -10px;
+}
+fieldset.filter-wrapper {
+  margin-top: -14px;
+}
+.node ul.links {
+  display: inline;
+}
+.tabs ul.tabs li a:hover,
+.tabs ul.tabs li a:active,
+.tabs ul.tabs li a:focus {
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=80)";
+  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=80);
+}

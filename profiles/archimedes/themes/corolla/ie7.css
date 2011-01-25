@@ -1,0 +1,71 @@
+/* $Id: ie7.css,v 1.21.2.4 2011/01/01 13:24:54 jarek Exp $ */
+
+/* Fix inline-blocks */
+#header-menu .content > ul > li,
+#logo,
+#name-and-slogan,
+.tabs ul.tabs li a,
+.field-type-taxonomy-term-reference .field-label,
+.field-type-taxonomy-term-reference .field-item,
+.field-type-taxonomy-term-reference .field-items,
+.tabs ul.tabs li,
+h1.page-title,
+body.page-admin div.add-or-remove-shortcuts {
+  zoom: 1;
+  display: inline;
+}
+/* Clearfix */
+* html .clearfix {
+  zoom: 1;
+}
+*:first-child+html .clearfix {
+  zoom: 1;
+}
+/* Trigger hasLayout */
+ul.menu li a,
+.block {
+  zoom: 1;
+}
+/* Bug: fix spacing between items in nested menus */
+ul.menu,
+ul.menu li {
+  margin: 0;
+}
+ul.menu li a {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+/* Bug: extra margin on navigation items */
+#navigation li.expanded ul {
+  list-style-position: outside;
+}
+/* Bug: Ugly arrows in navigation menu */
+#navigation li.expanded * {
+  list-style-image: none!important;
+  list-style-type: none!important;
+}
+/* Bug: reduce whitespace under footer blocks */
+.region-footer .block {
+  margin-bottom: 3px;
+}
+/* Fix other issues */
+td, th {
+  border-bottom: 1px solid #ccc;
+}
+textarea {
+  padding: 0;
+}
+input {
+  padding: 5px 0!important;
+}
+body.page-profile .profile {
+  min-height: 60px;
+  height:auto !important;
+  height: 60px;
+}
+input.password-confirm, input.password-field {
+  width: 13em;
+}
+#password-strength-text {
+  margin-top: 0;
+}

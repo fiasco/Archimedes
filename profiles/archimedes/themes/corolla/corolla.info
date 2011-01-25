@@ -1,0 +1,40 @@
+; $Id: corolla.info,v 1.21.2.3 2011/01/01 13:24:54 jarek Exp $
+
+name        = Corolla
+description = Corolla theme
+screenshot  = screenshot.png
+version     = VERSION
+core        = 6.x
+engine      = phptemplate
+
+features[] = logo
+features[] = name
+features[] = slogan
+features[] = node_user_picture
+features[] = comment_user_picture
+features[] = favicon
+
+regions[header_menu]    = Header menu
+regions[footer_menu]    = Footer menu
+regions[header]         = Header
+regions[sidebar_first]  = First sidebar
+regions[sidebar_second] = Second sidebar
+regions[highlight]      = Highlighted
+regions[content_top]    = Content top
+regions[content]        = Content
+regions[content_bottom] = Content bottom
+
+stylesheets[all][]   = reset.css
+stylesheets[all][]   = base.css
+stylesheets[all][]   = style.css
+stylesheets[all][]   = drupal-6.css
+stylesheets[all][]   = colors.css
+stylesheets[print][] = print.css
+
+
+; Information added by drupal.org packaging script on 2011-01-01
+version = "6.x-1.20"
+core = "6.x"
+project = "corolla"
+datestamp = "1293888721"
+

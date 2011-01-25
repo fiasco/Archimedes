@@ -1,5 +1,7 @@
 <?php
 
+define('ARCHIMEDES_SERVER_THEME', 'corolla');
+
 /**
  * Implementation of hook_profile_modules().
  */
@@ -70,8 +72,45 @@ function archimedes_profile_task_list() {
 }
 
 function archimedes_profile_tasks(&$task, $url) {
+  archimedes_config_theme();
    // Update the menu router information.
   menu_rebuild();
+}
+
+/**
+ * Configure theme
+ */
+function archimedes_config_theme() {
+  // Disable garland
+  db_query("UPDATE {system} SET status = 0 WHERE type = 'theme' and name = '%s'", 'garland');
+
+  // Enable Commons theme
+  db_query("UPDATE {system} SET status = 1 WHERE type = 'theme' and name = '%s'", ARCHIMEDES_SERVER_THEME);
+
+  // Set Commons theme as the default
+  variable_set('theme_default', ARCHIMEDES_SERVER_THEME);
+  $settings = variable_get('theme_' . ARCHIMEDES_SERVER_THEME . '_settings', array());
+  if (@copy(base_path() . 'profiles/archimedes/archimedes.jpg', file_directory_path() . '/archimedes_logo.jpg')) {
+    $settings['logo_path'] = file_directory_path() . '/archimedes_logo.jpg';
+  }
+  variable_set('theme_' . ARCHIMEDES_SERVER_THEME . '_settings', $settings);
+
+  // Insert blocks into regions
+  $block = array(
+    'bid' => 7,
+    'module' => 'menu'
+    'delta' => 'primary-links',
+    'theme' => ARCHIMEDES_SERVER_THEME,
+    'status' => 1,
+    'weight' => 0,
+    'region' => 'header_menu',
+  );
+  drupal_write_record('blocks', $block);
+
+  // Refresh registry
+  list_themes(TRUE);
+
+  drupal_rebuild_theme_registry();
 }
 
 /**

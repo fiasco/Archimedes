@@ -1,0 +1,178 @@
+/* $Id: style-rtl.css,v 1.23.2.8 2011/01/01 13:24:54 jarek Exp $ */
+
+#branding-wrapper {
+  float: right;
+  padding: 45px 25px 48px 0;
+}
+#site-slogan {
+  margin: 2px 3px 0 0;
+}
+#logo {
+  padding: 0 0 0 15px;
+}
+#header-menu .content > ul > li.expanded > a {
+  background-position: 10% 16px;
+  margin: 0 0 0 10px;
+}
+#header-menu .content > ul > li.expanded.active-trail > a {
+  background-position: 10% 16px;
+}
+#header-menu .content li.expanded ul {
+  right: 0px;
+}
+#header-menu .content li.expanded li.expanded > a {
+  background-position: 4% 50%;
+  background-image: url("images/arrow-left-white.png");
+}
+#header-menu .content li.expanded li.expanded ul {
+  margin: 0 190px 0 0;
+  right: 0;
+}
+#page a.feed-icon {
+  float: left;
+}
+.node ul.links.inline li {
+  margin: 0 0 0 8px;
+}
+.item-list ul.pager {
+  text-align: right;
+}
+ul.pager li:first-child {
+  margin: 0 0 0 6px;
+}
+#block-profile-author-information .user-picture {
+  float: right;
+  margin: 0 0 15px 15px;
+}
+#comments-wrapper .indented {
+  margin: 0 30px 0 0;
+}
+.node .user-picture {
+  float: right;
+  margin: 0 0 8px 10px;
+}
+.comment .user-picture {
+  float: left;
+  margin: 0 10px 10px 0;
+}
+.node .field-name-field-image {
+  float: right;
+}
+.field-type-image {
+  margin: 15px 0 15px 15px;
+}
+.page-links .page-next {
+  float: left;
+  text-align: left;
+}
+.book-navigation .page-previous  {
+  text-align: right;
+}
+.poll .vote-form {
+  text-align: right;
+}
+.profile .user-picture {
+  float: left;
+}
+div.vertical-tabs {
+  width: 100%;
+}
+.vertical-tabs-panes {
+  margin-left: 15em;
+}
+#password-strength {
+  float: left;
+}
+.password-strength-title {
+  float: none;
+}
+#password-strength-text {
+  float: left;
+}
+a.tabledrag-handle {
+  margin: 0 0 0 10px;
+}
+a.tabledrag-handle .handle {
+  margin: 0 0 0 14px;
+}
+table img {
+  margin: 0 7px 0 0;
+}
+html.js input.form-autocomplete {
+  background-position: 2% 6px;
+}
+html.js input.throbbing {
+  background-position: 2% -14px;
+}
+html.js fieldset.collapsible .fieldset-legend {
+  padding: 2px 14px 2px 0;
+}
+html.js fieldset.collapsible legend a {
+  padding: 0 0 0 15px;
+  background: url("images/arrow-down-white.gif") no-repeat left 4px;
+}
+html.js fieldset.collapsed legend a {
+  background: url(images/arrow-left-white.gif) no-repeat left 4px;
+}
+.theme-selector {
+  margin: 0 0 20px 25px;
+}
+.theme-info li {
+  padding: 0 0 0 10px;
+}
+.admin .left {
+  float: right;
+}
+.admin .right {
+  float: left;
+}
+body.page-profile .profile {
+  margin-right: 0;
+  margin-left: 1%;
+}
+body.page-profile .user-picture {
+  float: right;
+}
+body.page-profile .name,
+body.page-profile .field {
+  margin-left: 0;
+  margin-right: 60px;
+  padding: 12px 0 10px 10px;
+}
+#password-strength {
+  left: auto;
+  margin-top: 2em;
+  right: 16em;
+}
+#password-strength-text {
+  margin-top: 0;
+  float: left;
+}
+.form-item-pass-pass2 label {
+  clear: right;
+}
+#skip-link {
+  right: auto;
+  left: 20px;
+}
+#skip-link a,
+#skip-link a:link,
+#skip-link a:visited {
+  right: -10000px;
+  left: auto;
+}
+ul.menu li ul.menu {
+  margin-right: 7px;
+  margin-left: 0;
+}
+#closure #info {
+  float: right;
+  margin: 0 5px 10px 0;
+}
+#closure ul.links {
+  float: left;
+  margin: 0 0 10px 5px;
+}
+#closure ul.links li {
+  margin: 0 10px 0 0;
+}
