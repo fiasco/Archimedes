@@ -6,7 +6,7 @@
 function archimedes_profile_modules() {
   return array(
     // Core
-    'color', 'comment', 'help', 'menu', 'taxonomy', 'dblog', 'search', 'path',
+    'color', 'comment', 'help', 'menu', 'taxonomy', 'dblog', 'search', 'path', 'update',
 
     // Chaos Tools
     'ctools', 'page_manager', 'panels', 'context', 'context_ui',
