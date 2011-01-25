@@ -174,14 +174,14 @@ function archimedes_server_get_xml(){
 * Implementation of hook_cron().
 */
 function archimedes_server_cron() {
-  archimedes_server_update();
+  archimedes_server_clear_inbox();
 }
 
 
 /**
 * Update all nodes from inbox
 */
-function archimedes_server_update() {
+function archimedes_server_clear_inbox() {
   module_load_include('inc', 'archimedes_server');
   $data = archimedes_server_get_xml();
   if (empty($data)) {
