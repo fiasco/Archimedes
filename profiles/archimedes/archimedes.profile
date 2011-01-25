@@ -90,9 +90,8 @@ function archimedes_config_theme() {
   // Set Commons theme as the default
   variable_set('theme_default', ARCHIMEDES_SERVER_THEME);
   $settings = variable_get('theme_' . ARCHIMEDES_SERVER_THEME . '_settings', array());
-  if (@copy(base_path() . 'profiles/archimedes/archimedes.jpg', file_directory_path() . '/archimedes_logo.jpg')) {
-    $settings['logo_path'] = file_directory_path() . '/archimedes_logo.jpg';
-  }
+  $settings['logo_path'] = 'profiles/archimedes/archimedes.jpg';
+  $settings['default_logo'] = 0;
   variable_set('theme_' . ARCHIMEDES_SERVER_THEME . '_settings', $settings);
 
   // Insert blocks into regions
