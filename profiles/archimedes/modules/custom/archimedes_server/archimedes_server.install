@@ -5,6 +5,10 @@
  * Create private and public encryption keys.
  */
 function archimedes_server_install() {
+  // Don't regenerate keys if the module is re-installed.
+  if (variable_get('archimedes_key_private', FALSE)) {
+    return;
+  }
   // Create and save private key
   $res = openssl_pkey_new();
 
