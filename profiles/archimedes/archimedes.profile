@@ -104,6 +104,12 @@ function archimedes_config_theme() {
     'status' => 1,
     'weight' => 0,
     'region' => 'header_menu',
+    'custom' => 0,
+    'throttle' => 0,
+    'visibility' => 0,
+    'pages' => '',
+    'title' => '',
+    'cache' => -1,
   );
   drupal_write_record('blocks', $block);
 
