@@ -98,7 +98,7 @@ function archimedes_config_theme() {
   // Insert blocks into regions
   $block = array(
     'bid' => 7,
-    'module' => 'menu'
+    'module' => 'menu',
     'delta' => 'primary-links',
     'theme' => ARCHIMEDES_SERVER_THEME,
     'status' => 1,
