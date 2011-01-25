@@ -130,6 +130,7 @@ function archimedes_server_get_xml(){
     variable_get('archimedes_mail_ssl', FALSE)
   );
   $data = array();
+  // Read each message in inbox
   for($i = 1; $i <= imap_num_msg($mbox); $i++) {
     $struct = imap_fetchstructure($mbox, $i);
 
@@ -141,14 +142,18 @@ function archimedes_server_get_xml(){
     foreach($struct->parts as $section) {
       $sect = imap_fetchbody($mbox,$i,$id);
 
+      // Decode meaasge if encoded
       if ($section->encoding == 3)     // 3 = BASE64
         $sect = base64_decode($sect);
       elseif ($section->encoding == 4) // 4 = QUOTED-PRINTABLE
         $sect = quoted_printable_decode($sect);
 
+      // check for xml attachment
       if ($section->subtype == 'XML' && $section->disposition == 'ATTACHMENT') {
         $xml = $sect;
-      } elseif (substr($sect,0,5) == 'EKEY:') {
+      }
+      // Encrypted messages will contain section starting 'EKEY:'
+      elseif (substr($sect,0,5) == 'EKEY:') {
         $crypt = TRUE;
         $ekey = substr($sect,6);
       }
@@ -156,6 +161,7 @@ function archimedes_server_get_xml(){
     }
     imap_delete($mbox, $i);
 
+    // Decrypt encrypted message
     if ($crypt) {
       $prikey = openssl_pkey_get_private($pkey);
       openssl_open($xml,$uncrypt,$ekey, $prikey);
@@ -183,11 +189,16 @@ function archimedes_server_cron() {
 */
 function archimedes_server_update() {
   module_load_include('inc', 'archimedes_server');
+
+  // Get all updates form inbox 
   $data = archimedes_server_get_xml();
+
   if (empty($data)) {
     return;
   }
   date_default_timezone_set('UTC');
+
+  // loop through each xml update
   foreach($data as $xml) {
     // create blank node object
     $node = new stdClass();
@@ -215,6 +226,7 @@ function archimedes_server_update() {
     // but do not activate the user.
     $uid = archimedes_server_user_save($author);
 
+    // check if there is a node with unique id already
     if ($nid = db_result(db_query(sprintf("SELECT {content_type_%s}.nid FROM {content_type_%s} LEFT JOIN {content_field_unique_hash} ON {content_type_%s}.vid={content_field_unique_hash}.vid WHERE field_unique_hash_value = '%s' LIMIT 1", $type, $type, $type, $id)))) {
       $node = node_load(array('nid' => $nid));
       $node->revision = TRUE;
@@ -446,11 +458,14 @@ function archimedes_server_block($op = 'list', $delta = 0, $edit = array()) {
         if(arg(0) == 'node' && is_numeric(arg(1)) && ! arg(2)) {
           $host = node_load(arg(1));
 
+          // Get total disk space from host node
           $total = ($host->field_disk_space[0]['value'] ? (int)$host->field_disk_space[0]['value'] * 1024 * 1024 : 0);
 
           $used = 0;
+          // Get list of nodes showing current host as webserver or dbhost
           $data = nodereferrer_referrers(arg(1),array('field_webserver', 'field_dbhost'));
 
+          // Add data usage depending if used as a webserver or dbhost
           foreach($data as $ref_node) {
             $node = node_load($ref_node['nid'],null,TRUE);
             if ($ref_node['referrers']['field_webserver']) {
@@ -484,8 +499,10 @@ function archimedes_server_block($op = 'list', $delta = 0, $edit = array()) {
           $host = node_load(arg(1));
           
           $used = array();
+          // Get list of nodes showing current host as webserver or dbhost
           $data = nodereferrer_referrers(arg(1),array('field_webserver', 'field_dbhost'));
           
+          // Loop through each reffering site and add server usage
           foreach($data as $ref_node) {
             $node = node_load($ref_node['nid'],null,TRUE);
             $used[$ref_node['nid']] = array();
@@ -544,17 +561,6 @@ function archimedes_server_format_bytes($size) {
     $units = array(' B', ' KB', ' MB', ' GB', ' TB');
     for ($i = 0; $size >= 1024 && $i < 4; $i++) $size /= 1024;
     return round($size, 2).$units[$i];
-}
-
-/**
- * Find information of data usage for given host
- */
-function archimedes_server_host_data($nid) {
-  $data = array();
-  
-  
-  
-  
 }
 
 /**
