@@ -215,7 +215,7 @@ function dblog_filters() {
   $filters = array();
 
   foreach (_dblog_get_message_types() as $type) {
-    $types[$type] = t($type);
+    $types[$type] = $type;
   }
 
   if (!empty($types)) {

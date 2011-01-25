@@ -335,30 +335,30 @@ function _mime_header_decode($matches) {
  *   The input $text, with all HTML entities decoded once.
  */
 function decode_entities($text, $exclude = array()) {
-  static $html_entities;
-  if (!isset($html_entities)) {
-    include_once './includes/unicode.entities.inc';
+  static $table;
+  // We store named entities in a table for quick processing.
+  if (!isset($table)) {
+    // Get all named HTML entities.
+    $table = array_flip(get_html_translation_table(HTML_ENTITIES));
+    // PHP gives us ISO-8859-1 data, we need UTF-8.
+    $table = array_map('utf8_encode', $table);
+    // Add apostrophe (XML)
+    $table['&apos;'] = "'";
   }
+  $newtable = array_diff($table, $exclude);
 
-  // Flip the exclude list so that we can do quick lookups later.
-  $exclude = array_flip($exclude);
-
-  // Use a regexp to select all entities in one pass, to avoid decoding 
-  // double-escaped entities twice. The PREG_REPLACE_EVAL modifier 'e' is
-  // being used to allow for a callback (see 
-  // http://php.net/manual/en/reference.pcre.pattern.modifiers).
-  return preg_replace('/&(#x?)?([A-Za-z0-9]+);/e', '_decode_entities("$1", "$2", "$0", $html_entities, $exclude)', $text);
+  // Use a regexp to select all entities in one pass, to avoid decoding double-escaped entities twice.
+  return preg_replace('/&(#x?)?([A-Za-z0-9]+);/e', '_decode_entities("$1", "$2", "$0", $newtable, $exclude)', $text);
 }
 
 /**
  * Helper function for decode_entities
  */
-function _decode_entities($prefix, $codepoint, $original, &$html_entities, &$exclude) {
+function _decode_entities($prefix, $codepoint, $original, &$table, &$exclude) {
   // Named entity
   if (!$prefix) {
-    // A named entity not in the exclude list.
-    if (isset($html_entities[$original]) && !isset($exclude[$html_entities[$original]])) {
-      return $html_entities[$original];
+    if (isset($table[$original])) {
+      return $table[$original];
     }
     else {
       return $original;
@@ -392,7 +392,7 @@ function _decode_entities($prefix, $codepoint, $original, &$html_entities, &$exc
          . chr(0x80 | ( $codepoint        & 0x3F));
   }
   // Check for excluded characters
-  if (isset($exclude[$str])) {
+  if (in_array($str, $exclude)) {
     return $original;
   }
   else {

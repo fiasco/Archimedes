@@ -79,15 +79,8 @@ function db_connect($url) {
     _db_error_page(mysqli_connect_error());
   }
 
-  // Force MySQL to use the UTF-8 character set. Also set the collation, if a
-  // certain one has been set; otherwise, MySQL defaults to 'utf8_general_ci'
-  // for UTF-8.
-  if (!empty($GLOBALS['db_collation'])) {
-    mysqli_query($connection, 'SET NAMES utf8 COLLATE ' . $GLOBALS['db_collation']);
-  }
-  else {
-    mysqli_query($connection, 'SET NAMES utf8');
-  }
+  // Force UTF-8.
+  mysqli_query($connection, 'SET NAMES "utf8"');
 
   return $connection;
 }
@@ -346,12 +339,6 @@ function db_unlock_tables() {
 
 /**
  * Check if a table exists.
- *
- * @param $table
- *   The name of the table.
- *
- * @return
- *   TRUE if the table exists, and FALSE if the table does not exist.
  */
 function db_table_exists($table) {
   return (bool) db_fetch_object(db_query("SHOW TABLES LIKE '{". db_escape_table($table) ."}'"));
@@ -359,14 +346,6 @@ function db_table_exists($table) {
 
 /**
  * Check if a column exists in the given table.
- *
- * @param $table
- *   The name of the table.
- * @param $column
- *   The name of the column.
- *
- * @return
- *   TRUE if the column exists, and FALSE if the column does not exist.
  */
 function db_column_exists($table, $column) {
   return (bool) db_fetch_object(db_query("SHOW COLUMNS FROM {". db_escape_table($table) ."} LIKE '". db_escape_table($column) ."'"));

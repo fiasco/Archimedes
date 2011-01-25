@@ -25,6 +25,7 @@ Disallow: /misc/
 Disallow: /modules/
 Disallow: /profiles/
 Disallow: /scripts/
+Disallow: /sites/
 Disallow: /themes/
 # Files
 Disallow: /CHANGELOG.txt

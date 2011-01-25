@@ -62,9 +62,7 @@
  *   Any additional arguments are passed on to the functions called by
  *   drupal_get_form(), including the unique form constructor function.
  *   For example, the node_edit form requires that a node object be passed
- *   in here when it is called. These are available to implementations of
- *   hook_form_alter() and hook_form_FORM_ID_alter() as the array
- *   $form['#parameters'].
+ *   in here when it is called.
  * @return
  *   The rendered form.
  */

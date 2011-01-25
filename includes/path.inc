@@ -74,7 +74,7 @@ function drupal_lookup_path($action, $path = '', $path_language = '') {
     // isn't a path that has this alias
     elseif ($action == 'source' && !isset($no_src[$path_language][$path])) {
       // Look for the value $path within the cached $map
-      $src = FALSE;
+      $src = '';
       if (!isset($map[$path_language]) || !($src = array_search($path, $map[$path_language]))) {
         // Get the most fitting result falling back with alias without language
         if ($src = db_result(db_query("SELECT src FROM {url_alias} WHERE dst = '%s' AND language IN('%s', '') ORDER BY language DESC, pid DESC", $path, $path_language))) {
@@ -152,13 +152,10 @@ function drupal_get_normal_path($path, $path_language = '') {
  * @param $index
  *   The index of the component, where each component is separated by a '/'
  *   (forward-slash), and where the first component has an index of 0 (zero).
- * @param $path
- *   A path to break into components. Defaults to the path of the current page.
  *
  * @return
  *   The component specified by $index, or NULL if the specified component was
- *   not found. If called without arguments, it returns an array containing all
- *   the components of the current path.
+ *   not found.
  */
 function arg($index = NULL, $path = NULL) {
   static $arguments;
