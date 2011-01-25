@@ -638,6 +638,8 @@ function archimedes_server_ui_views_default_views() {
     'grouping' => '',
   ));
   $handler = $view->new_display('page', 'Page', 'page_1');
+  $handler->override_option('empty', 'Looks like Archimedes hasn\'t received any reports from any sites yet. Check the status report page to ensure Archimedes is running like it should be.');
+  $handler->override_option('empty_format', '1');
   $handler->override_option('path', 'site-list');
   $handler->override_option('menu', array(
     'type' => 'none',
