@@ -35,6 +35,9 @@ function archimedes_profile_modules() {
     // Features
     'features', 'archimedes_server', 'archimedes_drupal_site', 'archimedes_activity_stream',
     'archimedes_server_ui',
+
+    // Archimedes Client
+    'archimedes',
   );
 }
 
