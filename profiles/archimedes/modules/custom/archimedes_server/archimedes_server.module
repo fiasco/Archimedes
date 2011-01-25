@@ -330,10 +330,13 @@ function archimedes_server_clear_inbox() {
       $node->revision = FALSE;
 
       // allow other modules to modify node before final save
-      drupal_alter('archimedes_site', $node);
+      drupal_alter('archimedes_site', $node, 'pre');
 
       // save node after hooks
       node_save($node);
+
+      // allow other modules to modify node after final save
+      drupal_alter('archimedes_site', $node, 'post');
 
     }
     catch (Exception $e) {

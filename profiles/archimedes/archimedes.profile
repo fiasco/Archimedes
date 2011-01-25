@@ -72,9 +72,19 @@ function archimedes_profile_task_list() {
 }
 
 function archimedes_profile_tasks(&$task, $url) {
+  archimedes_config_menu();
+  archimedes_config_panels();
   archimedes_config_theme();
    // Update the menu router information.
   menu_rebuild();
+}
+
+/**
+ * Add custom Menu links.
+ */
+function archimedes_config_menu() {
+  $item = array('menu_name' => 'primary-links', 'weight' => -1, 'link_path' => '<front>', 'link_title' => t('Home'), 'module' => 'menu', 'expanded' => 0);
+  menu_link_save($item);
 }
 
 /**
@@ -116,6 +126,12 @@ function archimedes_config_theme() {
   list_themes(TRUE);
 
   drupal_rebuild_theme_registry();
+}
+
+function archimedes_config_panels() {
+  ctools_include('node_view', 'page_manager', 'plugins/tasks');
+  $page = page_manager_cache_load('node_view');
+  page_manager_node_view_enable($page, FALSE);
 }
 
 /**

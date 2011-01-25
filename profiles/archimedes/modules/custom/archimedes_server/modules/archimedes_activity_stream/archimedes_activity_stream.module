@@ -31,3 +31,12 @@ function archimedes_activity_stream_add($site_nid, $title, $body, $author_uid, $
 
   return node_save($node);
 }
+
+/**
+ * Implementation of hook_archimedes_site_alter().
+ */
+function archimedes_activity_stream_archimedes_site_alter(&$node, $op) {
+  if ($op == 'post') {
+    archimedes_activity_stream_add($node->nid, t('!title sent a new report', array('!title' => $node->title)), '', $node->uid, $node->created, array('Report'));
+  }
+}

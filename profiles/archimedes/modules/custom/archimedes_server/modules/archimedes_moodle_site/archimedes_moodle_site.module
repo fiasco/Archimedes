@@ -109,8 +109,8 @@ function archimedes_moodle_site_type($node) {
 }
 
 
-function archimedes_moodle_site_archimedes_site_alter(&$node) {
-  if (isset($node->field_mdl_mod)) {
+function archimedes_moodle_site_archimedes_site_alter(&$node, $op) {
+  if ($op == 'pre' && isset($node->field_mdl_mod)) {
     foreach ($node->field_mdl_mod as $field) {
       if($rid = db_result(db_query(sprintf("SELECT rid FROM {archimedes_moodle_site_modules} WHERE nid = %s AND vid = %d LIMIT 1", $node->nid, $field['vid'])))) {
         db_query(sprintf("UPDATE {archimedes_moodle_site_modules} set instances = %d WHERE rid = %d", $field['instances'], $rid));

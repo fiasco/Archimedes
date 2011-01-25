@@ -178,9 +178,9 @@ function archimedes_drupal_site_archimedes_cache_set($url,$key,$project) {
 /**
  * Implementation of archimedes_site_alter
  */
-function archimedes_drupal_site_archimedes_site_alter(&$node) {
+function archimedes_drupal_site_archimedes_site_alter(&$node, $op) {
 
-  if ($version = $node->field_drupal_version[0]['value']) {
+  if ($op == 'pre' && $version = $node->field_drupal_version[0]['value']) {
     $tid = '';
     switch (substr($version,0,1)) {
       case '5':
