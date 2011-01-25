@@ -399,10 +399,10 @@ function nodereferrer_referrers($nid,  $fieldnames = array(), $nodetypes = array
       break;
   }
 
-  $fields = array('n.nid','n.vid','n.title');
+  $sql_fields = array('n.nid','n.vid','n.title');
   $order_field = substr($order, 0, strrpos($order, ' '));
   if(!in_array($order_field, $fields)) {
-    $fields[] = $order_field;
+    $sql_fields[] = $order_field;
   }
 
   $values = array();
@@ -411,7 +411,7 @@ function nodereferrer_referrers($nid,  $fieldnames = array(), $nodetypes = array
       $db_info = content_database_info($fields[$fieldname]);
 
       if ($translations) {
-        $query = "SELECT       " . implode(", ", $fields) . "
+        $query = "SELECT       " . implode(", ", $sql_fields) . "
                   FROM         {" . $db_info['table'] . "} nr
                   INNER JOIN   {node} current_node ON current_node.nid = %d
                   INNER JOIN   {node} n ON n.vid = nr.vid AND n.status = 1 " . $filter_nodetypes . "
@@ -422,7 +422,7 @@ function nodereferrer_referrers($nid,  $fieldnames = array(), $nodetypes = array
                   ORDER BY     " . $order;
       }
       else {
-        $query = "SELECT       " . implode(", ", $fields) . "
+        $query = "SELECT       " . implode(", ", $sql_fields) . "
                   FROM         {" . $db_info['table'] . "} nr
                   INNER JOIN   {node} n ON n.vid = nr.vid AND n.status = 1 " . $filter_nodetypes . "
                   WHERE        nr." . $db_info['columns']['nid']['column'] . " = %d
