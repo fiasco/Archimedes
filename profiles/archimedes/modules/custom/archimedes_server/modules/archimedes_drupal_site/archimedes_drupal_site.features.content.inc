@@ -6,58 +6,6 @@
 function archimedes_drupal_site_content_default_fields() {
   $fields = array();
 
-  // Exported field: field_cat_env
-  $fields['drupal-field_cat_env'] = array(
-    'field_name' => 'field_cat_env',
-    'type_name' => 'drupal',
-    'display_settings' => array(
-      'weight' => '24',
-      'parent' => '',
-      'label' => array(
-        'format' => 'above',
-      ),
-      'teaser' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-      'full' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-      '4' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-    ),
-    'widget_active' => '1',
-    'type' => 'text',
-    'required' => '0',
-    'multiple' => '0',
-    'module' => 'text',
-    'active' => '1',
-    'text_processing' => '0',
-    'max_length' => '',
-    'allowed_values' => 'Development
-Staging
-Production',
-    'allowed_values_php' => '',
-    'widget' => array(
-      'default_value' => array(
-        '0' => array(
-          'value' => '',
-        ),
-      ),
-      'default_value_php' => NULL,
-      'rows' => 5,
-      'size' => '60',
-      'label' => 'Environment',
-      'weight' => '24',
-      'description' => '',
-      'type' => 'optionwidgets_select',
-      'module' => 'optionwidgets',
-    ),
-  );
-
   // Exported field: field_db_size
   $fields['drupal-field_db_size'] = array(
     'field_name' => 'field_db_size',
@@ -200,6 +148,8 @@ Production',
     'allowed_values' => '',
     'allowed_values_php' => '',
     'widget' => array(
+      'rows' => 5,
+      'size' => '60',
       'default_value' => array(
         '0' => array(
           'value' => '',
@@ -207,61 +157,8 @@ Production',
         ),
       ),
       'default_value_php' => NULL,
-      'rows' => 5,
-      'size' => '60',
       'label' => 'Database Name',
       'weight' => '36',
-      'description' => '',
-      'type' => 'text_textfield',
-      'module' => 'text',
-    ),
-  );
-
-  // Exported field: field_deb
-  $fields['drupal-field_deb'] = array(
-    'field_name' => 'field_deb',
-    'type_name' => 'drupal',
-    'display_settings' => array(
-      'weight' => '47',
-      'parent' => '',
-      'label' => array(
-        'format' => 'above',
-      ),
-      'teaser' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-      'full' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-      '4' => array(
-        'format' => 'default',
-        'exclude' => 0,
-      ),
-    ),
-    'widget_active' => '1',
-    'type' => 'text',
-    'required' => '0',
-    'multiple' => '0',
-    'module' => 'text',
-    'active' => '1',
-    'text_processing' => '0',
-    'max_length' => '',
-    'allowed_values' => '',
-    'allowed_values_php' => '',
-    'widget' => array(
-      'rows' => 5,
-      'size' => '60',
-      'default_value' => array(
-        '0' => array(
-          'value' => '',
-          '_error_element' => 'default_value_widget][field_deb][0][value',
-        ),
-      ),
-      'default_value_php' => NULL,
-      'label' => 'Debian Package',
-      'weight' => '47',
       'description' => '',
       'type' => 'text_textfield',
       'module' => 'text',
@@ -1295,6 +1192,8 @@ Production',
     'allowed_values' => '',
     'allowed_values_php' => '',
     'widget' => array(
+      'rows' => 5,
+      'size' => '60',
       'default_value' => array(
         '0' => array(
           'value' => '',
@@ -1302,8 +1201,6 @@ Production',
         ),
       ),
       'default_value_php' => NULL,
-      'rows' => 5,
-      'size' => '60',
       'label' => 'Package',
       'weight' => '6',
       'description' => '',
@@ -1449,6 +1346,8 @@ Production',
     'allowed_values' => '',
     'allowed_values_php' => '',
     'widget' => array(
+      'rows' => 5,
+      'size' => '16',
       'default_value' => array(
         '0' => array(
           'value' => '',
@@ -1456,8 +1355,6 @@ Production',
         ),
       ),
       'default_value_php' => NULL,
-      'rows' => 5,
-      'size' => '16',
       'label' => 'Version',
       'weight' => '-3',
       'description' => '',
@@ -1599,6 +1496,8 @@ Production',
     'allowed_values' => '',
     'allowed_values_php' => '',
     'widget' => array(
+      'rows' => 5,
+      'size' => '16',
       'default_value' => array(
         '0' => array(
           'value' => '',
@@ -1606,8 +1505,6 @@ Production',
         ),
       ),
       'default_value_php' => NULL,
-      'rows' => 5,
-      'size' => '16',
       'label' => 'Version',
       'weight' => '35',
       'description' => '',
@@ -1725,9 +1622,7 @@ Production',
   t('Database Host');
   t('Database Name');
   t('Database Size');
-  t('Debian Package');
   t('Directory Hash');
-  t('Environment');
   t('Git Hash');
   t('Git Repositories');
   t('Last Update');

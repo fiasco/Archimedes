@@ -17,9 +17,9 @@ function archimedes_drupal_site_taxonomy_default_vocabularies() {
       'module' => 'features_drupal_major_version',
       'weight' => '0',
       'nodes' => array(
-        'drupal_theme' => 'drupal_theme',
-        'drupal' => 'drupal',
         'drupal_module' => 'drupal_module',
+        'drupal' => 'drupal',
+        'drupal_theme' => 'drupal_theme',
       ),
     ),
   );

@@ -168,7 +168,7 @@ function archimedes_drupal_site_default_page_manager_handlers() {
     $pane->access = array();
     $pane->configuration = array(
       'label' => 'normal',
-      'formatter' => 'imagefield__lightbox2__SiteThumb__original',
+      'formatter' => 'SiteThumb_imagelink',
       'context' => 'argument_nid_1',
       'override_title' => 1,
       'override_title_text' => '',
