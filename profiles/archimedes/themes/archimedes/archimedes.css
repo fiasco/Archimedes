@@ -45,3 +45,45 @@
 .view-subscribed-sites .views-field-nothing {
   clear:left;
 }
+
+
+/**
+ * Block styling
+ */
+
+.archimedes-administer-site a {
+  padding:1em;
+  border: 1px solid #ccc;
+  display:block;
+  background-color:#F3F3F3;
+  margin: 1em 0;
+  font-weight:bold;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+}
+
+.archimedes-administer-site a:hover {
+  background-color:#eee;
+  border: 1px solid #ccc;
+}
+
+.field-field-thumbnail .field-item {
+  text-align: center;
+}
+
+.field-field-thumbnail img {
+  -moz-box-shadow: 2px 2px 3px #666;
+  -webkit-box-shadow: 2px 2px 3px #666;
+  box-shadow: 2px 2px 3px #666;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+}
+
+.field-field-thumbnail a {
+  border: 0;
+}
+
+
