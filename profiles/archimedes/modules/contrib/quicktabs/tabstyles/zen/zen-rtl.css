@@ -1,7 +1,0 @@
-/* $Id: zen-rtl.css,v 1.1.2.2 2008/12/07 17:22:03 pasqualle Exp $ */
-
-/* RTL support */
-
-ul.quicktabs_tabs.quicktabs-style-zen li{
-  float: right;
-}
