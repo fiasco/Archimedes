@@ -87,14 +87,6 @@ function archimedes_drupal_site_default_page_manager_handlers() {
         'parent' => '2',
         'class' => '',
       ),
-      'stream' => array(
-        'type' => 'region',
-        'title' => 'Stream',
-        'width' => 100,
-        'width_type' => '%',
-        'parent' => '6',
-        'class' => '',
-      ),
       7 => array(
         'type' => 'column',
         'width' => '266',
@@ -122,6 +114,14 @@ function archimedes_drupal_site_default_page_manager_handlers() {
         'parent' => '8',
         'class' => '',
       ),
+      'stream' => array(
+        'type' => 'region',
+        'title' => 'Stream',
+        'width' => 100,
+        'width_type' => '%',
+        'parent' => '6',
+        'class' => '',
+      ),
     ),
   );
   $display->panel_settings = array(
@@ -135,12 +135,12 @@ function archimedes_drupal_site_default_page_manager_handlers() {
       ),
       'left' => NULL,
       'middle' => NULL,
+      'stream' => NULL,
+      'sidebar' => NULL,
       'tabs' => array(
         'title' => '',
         'filling_tabs' => 'disabled',
       ),
-      'stream' => NULL,
-      'sidebar' => NULL,
     ),
     'center' => array(
       'style' => '-1',
@@ -153,6 +153,9 @@ function archimedes_drupal_site_default_page_manager_handlers() {
     ),
     'tabs' => array(
       'style' => 'tabs',
+    ),
+    'sidebar' => array(
+      'style' => '-1',
     ),
   );
   $display->cache = array();
