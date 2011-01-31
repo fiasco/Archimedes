@@ -1,1 +1,2 @@
-sites/default/settings.php
+sites/
+profiles/archimedes/modules/custom/archimedes_server/python-webkit2png/
