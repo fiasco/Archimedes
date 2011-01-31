@@ -1,0 +1,47 @@
+/**
+ * Views styling
+ */
+
+.view-subscribed-sites .view-content .views-row {
+  margin:5px;
+  padding:2px;
+  border-radius: 2px;
+  -moz-border-radius: 2px;
+  -webkit-border-radius: 2px;
+  border: 1px solid #086782;
+}
+
+.view-subscribed-sites .views-field-nothing {
+  clear:left;
+}
+
+.view-subscribed-sites .views-field-field-thumbnail-fid {
+  float: left;
+  margin-right: 5px;
+  padding: 5px;
+}
+
+.view-subscribed-sites .views-field-field-thumbnail-fid a {
+  border: 0;
+}
+
+.view-subscribed-sites .views-field-field-thumbnail-fid img {
+  border: 1px solid #ccc;
+  box-shadow: 2px 2px 3px #666;
+  -moz-box-shadow: 2px 2px 3px #666;
+  -webkit-box-shadow: 2px 2px 3px #666;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+}
+
+.view-subscribed-sites .views-field-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  padding-top: 10px;
+}
+
+.view-subscribed-sites .views-field-nothing {
+  clear:left;
+}
