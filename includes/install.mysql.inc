@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: install.mysql.inc,v 1.9 2008/01/23 09:59:29 goba Exp $
 
 // MySQL specific install functions
 

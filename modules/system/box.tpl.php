@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: box.tpl.php,v 1.3 2007/12/16 21:01:45 goba Exp $
 
 /**
  * @file box.tpl.php
