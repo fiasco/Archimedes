@@ -2,7 +2,7 @@
   module_load_include('inc', 'archimedes_drupal_site', 'archimedes_drupal_site.update');
   if ($output) {
     $major_version = substr($output,0,1);
-    if ($data = cache_get('drupal' . $major_version . '.x', 'cache_arch_drupal')) {
+    if ($data = cache_get('drupal' . $major_version . '.x', 'cache_archimedes_drupal')) {
       $latest = reset($data->data['releases']);
       $link = $latest['download_link'];
       $latest = $latest['version'];
