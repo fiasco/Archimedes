@@ -95,4 +95,8 @@
   border: 0;
 }
 
+#tabs-tabs {
+  min-height: 330px;
+}
+
 
