@@ -46,6 +46,15 @@
   clear:left;
 }
 
+.view-glance .tick{
+  background: url('images/icons/tick.png') no-repeat;
+  padding-left: 20px;
+}
+
+.view-glance .old {
+  background: url('images/icons/error.png') no-repeat;
+  padding-left: 20px;
+}
 
 /**
  * Block styling
