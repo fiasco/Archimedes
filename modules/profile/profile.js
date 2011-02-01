@@ -1,4 +1,4 @@
-// $Id$
+// $Id: profile.js,v 1.2 2007/12/08 14:06:22 goba Exp $
 
 /**
  * Add functionality to the profile drag and drop table.

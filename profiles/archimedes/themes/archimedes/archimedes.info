@@ -1,0 +1,17 @@
+name = Archimedes Theme
+description = Theme implementing template overrides for Archimedes Server
+core = 6.x
+engine = phptemplate
+base theme = corolla
+
+regions[header_menu]    = Header menu
+regions[footer_menu]    = Footer menu
+regions[header]         = Header
+regions[sidebar_first]  = First sidebar
+regions[sidebar_second] = Second sidebar
+regions[highlight]      = Highlighted
+regions[content_top]    = Content top
+regions[content]        = Content
+regions[content_bottom] = Content bottom
+
+stylesheets[all][]   = archimedes.css

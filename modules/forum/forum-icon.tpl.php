@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: forum-icon.tpl.php,v 1.3 2007/12/20 09:35:09 goba Exp $
 
 /**
  * @file forum-icon.tpl.php

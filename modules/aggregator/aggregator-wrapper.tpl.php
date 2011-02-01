@@ -1,5 +1,5 @@
 <?php
-// $Id$
+// $Id: aggregator-wrapper.tpl.php,v 1.1 2007/09/13 08:02:38 goba Exp $
 
 /**
  * @file comment-wrapper.tpl.php
