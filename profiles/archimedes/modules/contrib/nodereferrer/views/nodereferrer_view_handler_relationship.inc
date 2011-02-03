@@ -56,7 +56,12 @@ class nodereferrer_view_handler_relationship extends views_handler_relationship 
       $db_info = content_database_info($field);
 
       $join = new views_join();
-      $join->construct($db_info['table'], 'node', 'nid', $db_info['columns']['nid']['column']);
+      if ($field['type'] == 'revisionreference') {
+        $join->construct($db_info['table'], 'node', 'vid', $db_info['columns']['vid']['column']);
+      }
+      else {
+        $join->construct($db_info['table'], 'node', 'nid', $db_info['columns']['nid']['column']);
+      }
 
       // Add delta condition.
       if (!isset($join->extra)) {

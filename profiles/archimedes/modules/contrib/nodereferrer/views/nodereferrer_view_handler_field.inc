@@ -106,11 +106,12 @@ class nodereferrer_view_handler_field extends views_handler_field {
    * Given a node id, field names and content names, returns the list of nodes
    * that refer to the given node. This takes translation settings into account
    */
-  function referrers($nid, $fields, $types = NULL) {
+  function referrers($nid, $fields, $types = NULL, $vid = NULL) {
     return nodereferrer_referrers_with_translations(
       $nid, $fields, $types,
       !empty($this->options['multilingual']['referrers_of_translations']),
-      !empty($this->options['multilingual']['translations_of_referrers'])
+      !empty($this->options['multilingual']['translations_of_referrers']),
+      $vid
     );
   }
 
@@ -119,7 +120,9 @@ class nodereferrer_view_handler_field extends views_handler_field {
    *
    */
   function render($values) {
-    $list = $this->get_item_list($values->nid);
+    if (!$list = $this->get_item_list($values->nid)) {
+      $list = $this->get_item_list($values->vid);
+    }
     if ($this->options['formatter'] == 'count') {
       return (string)count($list);
     }

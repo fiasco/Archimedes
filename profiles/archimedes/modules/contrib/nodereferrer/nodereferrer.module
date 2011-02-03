@@ -136,7 +136,7 @@ function nodereferrer_field($op, &$node, $field, &$items, $teaser, $page) {
       $fields = isset($field['referrer_fields']) ? array_values(array_filter($field['referrer_fields'])) : array();
       $order = $field['referrer_order'];
       $translations = isset($field['referrer_translations']) ? $field['referrer_translations'] : 0;
-      $values = nodereferrer_referrers($node->nid, $fields, $types, $translations, $order);
+      $values = nodereferrer_referrers($node->nid, $fields, $types, $translations, $order, $node->vid);
       // Pass referring node objects into CCK content_load() cache. 24/08/2006 sun
       $items = array();
       foreach ($values as $nid => $rnode) {
@@ -164,7 +164,7 @@ function nodereferrer_field($op, &$node, $field, &$items, $teaser, $page) {
 
       // clear any modules referring to me as my title or other data may change.
       // and nodereference doesn't clear the cache yet.
-      foreach (nodereferrer_referrers($node->nid, $fields, $types, false) as $delta => $item) {
+      foreach (nodereferrer_referrers($node->nid, $fields, $types, false, 'DESC', $node->vid) as $delta => $item) {
         $cid = 'content:' . $item['nid'] . ':' . $item['vid'];
         cache_clear_all($cid, 'cache_page');
       }
@@ -365,7 +365,7 @@ function nodereferrer_content_is_empty($item, $field) {
  *     boolean if true, also return nodes that referrer to translations of the given node
  */
 
-function nodereferrer_referrers($nid,  $fieldnames = array(), $nodetypes = array(), $translations = 0, $order = 'DESC') {
+function nodereferrer_referrers($nid,  $fieldnames = array(), $nodetypes = array(), $translations = 0, $order = 'DESC', $vid = null) {
   if ($nodetypes) {
     $filter_nodetypes = "AND n.type IN ('" . implode("', '", $nodetypes) . "')";
   }
@@ -441,6 +441,41 @@ function nodereferrer_referrers($nid,  $fieldnames = array(), $nodetypes = array
         $values[$value['nid']]['referrers'][$fieldname] = $fieldname;
       }
     }
+    elseif ($fields[$fieldname]['type'] == 'revisionreference' && is_numeric($vid)) {
+      $db_info = content_database_info($fields[$fieldname]);
+
+      if ($translations) {
+        $query = "SELECT       n.nid, n.vid, n.title $select_field
+                  FROM         {" . $db_info['table'] . "} nr
+                  INNER JOIN   {node} current_node ON current_node.nid = %d
+                  INNER JOIN   {node} n ON n.vid = nr.vid AND n.status = 1 " . $filter_nodetypes . "
+                  LEFT JOIN    {node} translations ON current_node.tnid > 0 AND translations.tnid = current_node.tnid
+                  WHERE        (current_node.tnid = 0 AND nr." . $db_info['columns']['vid']['column'] . " = current_node.vid)
+                               OR
+                               (current_node.tnid > 0 AND nr." . $db_info['columns']['vid']['column'] . " = translations.vid)
+                  ORDER BY     " . $order;
+      }
+      else {
+        $query = "SELECT       n.nid, n.vid, n.title $select_field
+                  FROM         {" . $db_info['table'] . "} nr
+                  INNER JOIN   {node} n ON n.vid = nr.vid AND n.status = 1 " . $filter_nodetypes . "
+                  WHERE        nr." . $db_info['columns']['vid']['column'] . " = %d
+                  ORDER BY     " . $order;
+      }
+
+      $query = db_rewrite_sql($query);
+      $result = db_query($query, $vid);
+
+      while ($value = db_fetch_array($result)) {
+        // avoid duplicate referrers by using nid as key
+        $values[$value['nid']]['nid'] = $value['nid'];
+        $values[$value['nid']]['vid'] = $value['vid'];
+        $values[$value['nid']]['title'] = $value['title'];
+        //Store the nodereference fieldnames in the nodereferrer data in the node,
+        //so that it can be looked up without needing to load the referring node.
+        $values[$value['nid']]['referrers'][$fieldname] = $fieldname;
+      }
+    }
   }
   return $values;
 }
@@ -453,8 +488,8 @@ function nodereferrer_nodereference_field_options() {
   $options = array();
   $types = content_fields();
   foreach($types as $type) {
-    if ($type['type'] == 'nodereference') {
-      $options[$type['field_name']] = $type['field_name'] . ' (' . $type['widget']['label'] . ')';
+    if ($type['type'] == 'nodereference' || $type['type'] == 'revisionreference') {
+      $options[$type['field_name']] = $type['field_name'] . ' (' . $type['widget']['label'] . ') [' . $type['type'] . ']';
     }
   }
   return $options;

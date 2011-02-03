@@ -18,13 +18,13 @@ class nodereferrer_view_handler_field_type extends nodereferrer_view_handler_fie
     return node_get_types('names');
   }
 
-  function get_item_list($nid) {
+  function get_item_list($id) { // Can be nid or vid
     $fields = array_keys(nodereferrer_nodereference_field_options());
     $node_type = array_filter($this->options['fields']);
     if (empty($node_type)) {
       $node_type = array_keys(node_get_types('names'));
     }
     
-    return $this->referrers($nid, $fields, $node_type);
+    return $this->referrers($id, $fields, $node_type, $id);
   }
 }

@@ -18,7 +18,7 @@ class nodereferrer_view_handler_field_field extends nodereferrer_view_handler_fi
     return nodereferrer_nodereference_field_options();
   }
 
-  function get_item_list($nid) {
+  function get_item_list($id) { // Can be nid or vid
     if (empty($this->options['fields'])) {
       $fields = array_keys(nodereferrer_nodereference_field_options());
     }
@@ -26,6 +26,6 @@ class nodereferrer_view_handler_field_field extends nodereferrer_view_handler_fi
       $fields = array_keys(array_filter($this->options['fields']));
     }
 
-    return $this->referrers($nid, $fields);
+    return $this->referrers($id, $fields, NULL, $id);
   }
 }

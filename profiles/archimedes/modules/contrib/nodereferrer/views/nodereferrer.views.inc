@@ -101,12 +101,12 @@ function nodereferrer_views_handlers() {
  * Given a node id, field names and content names, returns the list of nodes
  * that refer to the given node. This takes translation settings into account
  */
-function nodereferrer_referrers_with_translations($nid, $fields, $types, $ref_of_trans, $trans_of_ref) {
+function nodereferrer_referrers_with_translations($nid, $fields, $types, $ref_of_trans, $trans_of_ref, $vid = null) {
   if (!module_exists('translation')) {
-    return nodereferrer_referrers($nid, $fields, $types);
+    return nodereferrer_referrers($nid, $fields, $types, 0, 'DESC', $vid);
   }
 
-  $ref = nodereferrer_referrers($nid, $fields, $types, $ref_of_trans);
+  $ref = nodereferrer_referrers($nid, $fields, $types, $ref_of_trans, 'DESC', $vid);
 
   if ($trans_of_ref && count($ref)) {
     $in = implode(',', array_keys($ref));
