@@ -712,7 +712,7 @@ function archimedes_drupal_site_content_default_fields() {
     'url' => 0,
     'title' => 'none',
     'title_value' => '',
-    'enable_tokens' => 0,
+    'enable_tokens' => '',
     'validate_url' => 0,
     'widget' => array(
       'default_value' => array(

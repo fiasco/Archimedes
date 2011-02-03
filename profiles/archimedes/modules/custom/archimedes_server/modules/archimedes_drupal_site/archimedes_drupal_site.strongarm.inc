@@ -206,7 +206,6 @@ function archimedes_drupal_site_strongarm() {
     'options' => '31',
     'comment_settings' => '32',
     'menu' => '27',
-    'taxonomy' => '26',
     'path' => '30',
   );
 
