@@ -1,5 +1,5 @@
 <?php
-// $Id: nodereferrer_view_handler_relationship.inc,v 1.1.2.4 2010/03/29 21:08:23 andypost Exp $
+// $Id: nodereferrer_view_handler_relationship.inc,v 1.1.2.5 2010/12/14 20:25:01 andypost Exp $
 /**
  * @file
  * nodereferrer.module Views integration
@@ -75,5 +75,41 @@ class nodereferrer_view_handler_relationship extends views_handler_relationship 
     }
 
     return $this->table_alias;
+  }
+
+  /**
+   * Called to implement a relationship in a query.
+   */
+  function query() {
+    // Figure out what base table this relationship brings to the party.
+    $table_data = views_fetch_data($this->definition['base']);
+    $base_field = empty($this->definition['base field']) ? $table_data['table']['base']['field'] : $this->definition['base field'];
+
+    $this->ensure_my_table();
+
+    $def = $this->definition;
+    $def['table'] = $this->definition['base'];
+    $def['field'] = 'vid';
+    $def['left_table'] = $this->table_alias;
+    $def['left_field'] = 'vid';
+    if (!empty($this->options['required'])) {
+      $def['type'] = 'INNER';
+    }
+
+    if (!empty($def['join_handler']) && class_exists($def['join_handler'])) {
+      $join = new $def['join_handler'];
+    }
+    else {
+      $join = new views_join();
+    }
+
+    $join->definition = $def;
+    $join->construct();
+    $join->adjusted = TRUE;
+
+    // use a short alias for this:
+    $alias = $def['table'] . '_' . $this->table;
+
+    $this->alias = $this->query->add_relationship($alias, $join, $this->definition['base'], $this->relationship);
   }
 }
