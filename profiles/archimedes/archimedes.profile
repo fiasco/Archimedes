@@ -14,7 +14,7 @@ function archimedes_profile_modules() {
     'ctools', 'page_manager', 'panels', 'context', 'context_ui',
 
     // Views
-    'views', 'views_ui', 'views_content', 'views_charts', 'views_groupby',
+    'views', 'views_ui', 'views_content', 'views_groupby',
 
     // CCK
     'content', 'fieldgroup', 'text', 'filefield', 'imagefield',
@@ -32,7 +32,7 @@ function archimedes_profile_modules() {
     'strongarm',
 
     // Style
-    'token', 'pathauto', 'diff', 'admin', 'charts_graphs', 'charts_graphs_google_charts',
+    'token', 'pathauto', 'charts_graphs', 'charts_graphs_google_charts',
 
     // Features
     'features', 'archimedes_server', 'archimedes_drupal_site', 'archimedes_activity_stream',
