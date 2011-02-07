@@ -94,19 +94,11 @@ function archimedes_config_theme() {
   // Disable garland
   db_query("UPDATE {system} SET status = 0 WHERE type = 'theme' and name = '%s'", 'garland');
 
-  // Enable Commons theme
+  // Enable Archimedes theme
   db_query("UPDATE {system} SET status = 1 WHERE type = 'theme' and name = '%s'", ARCHIMEDES_SERVER_THEME);
 
-  // Set Commons theme as the default
+  // Set Archimedes variables theme as the default
   variable_set('theme_default', ARCHIMEDES_SERVER_THEME);
-  $settings = variable_get('theme_' . ARCHIMEDES_SERVER_THEME . '_settings', array());
-  $settings['layout_1_min_width'] = '960px';
-  $settings['layout_1_max_width'] = '960px';
-  $settings['layout_2_min_width'] = '960px';
-  $settings['layout_2_max_width'] = '960px';
-  $settings['layout_3_min_width'] = '960px';
-  $settings['layout_3_max_width'] = '960px';
-  variable_set('theme_' . ARCHIMEDES_SERVER_THEME . '_settings', $settings);
 
   // Insert blocks into regions
   $block = array(
