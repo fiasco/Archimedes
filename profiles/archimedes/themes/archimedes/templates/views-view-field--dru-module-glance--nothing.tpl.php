@@ -12,8 +12,13 @@
     $terms = taxonomy_get_tree($vid);
     foreach ($terms as $version) {
       if ($data = cache_get($proj . $version->name, 'cache_archimedes_drupal')) {
-        $latest = reset($data->data['releases']);
-        $recommended[] = $latest['version'];
+      $recom = $data->data['recommended_major'];
+        foreach($data->data['releases'] as $release) {
+          if ($release['version_major'] == $recom) {
+            $recommended[] = $release['version'];
+            break;
+          }
+        }
       }
     }
   }
