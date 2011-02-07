@@ -97,8 +97,10 @@ function archimedes_config_theme() {
   // Enable Archimedes theme
   db_query("UPDATE {system} SET status = 1 WHERE type = 'theme' and name = '%s'", ARCHIMEDES_SERVER_THEME);
 
-  // Set Archimedes variables theme as the default
+  // Set Archimedes theme as the default
   variable_set('theme_default', ARCHIMEDES_SERVER_THEME);
+  $settings = variable_get('theme_' . ARCHIMEDES_SERVER_THEME . '_settings', array());
+  variable_set('theme_' . ARCHIMEDES_SERVER_THEME . '_settings', $settings);
 
   // Insert blocks into regions
   $block = array(
