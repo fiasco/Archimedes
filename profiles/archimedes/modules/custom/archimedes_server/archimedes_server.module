@@ -231,7 +231,9 @@ function archimedes_server_clear_inbox() {
     $uid = archimedes_server_user_save($author);
 
     // check if there is a node with unique id already
-    if ($nid = db_result(db_query(sprintf("SELECT {content_type_%s}.nid FROM {content_type_%s} LEFT JOIN {content_field_unique_hash} ON {content_type_%s}.vid={content_field_unique_hash}.vid WHERE field_unique_hash_value = '%s' LIMIT 1", $type, $type, $type, $id)))) {
+    $field = content_fields('field_unique_hash', $type);
+    $db_info = content_database_info($field);
+    if ($nid = db_result(db_query(sprintf("SELECT type.nid FROM {content_type_%s} type LEFT JOIN {".$db_info['table']."} hash ON type.vid=hash.vid WHERE hash.field_unique_hash_value = '%s' LIMIT 1", $type, $id)))) {
       $node = node_load(array('nid' => $nid));
       $node->revision = TRUE;
     }
