@@ -89,7 +89,7 @@ function archimedes_server_admin() {
     '#type' => 'select',
     '#title' => 'Charts and Graphs Library',
     '#default_value' => variable_get('archimedes_ui_graph', 'google-charts'),
-    '#description' => 'Select the graphing library to use. Enable more on the modules page.',
+    '#description' => 'Select the graphing library to use. Enable more on the modules page. Warning: Archimedes has been written to use Google Charts, other libraries may not function as well.',
     '#options' => $graphs
   );
   $form['archimedes_keys'] = array(
