@@ -43,7 +43,13 @@ function archimedes_moodle_site_block($op = 'list', $delta = 0, $edit = array())
 
           // moodle growth graph
           $courses = $users = $times = $xdates = array();
-          $query = db_query(sprintf("SELECT last_update.field_last_update_value AS timestamp, user_table.field_num_users_value AS users, content_moodle.field_mdl_num_courses_value AS courses FROM {content_field_last_update} last_update LEFT JOIN {content_field_num_users} user_table ON last_update.vid=user_table.vid LEFT JOIN {content_type_moodle} content_moodle ON last_update.vid=content_moodle.vid WHERE last_update.nid = %s  ORDER BY last_update.vid",$node->nid));
+
+          $field = content_fields('field_last_update', 'drupal');
+          $db_update = content_database_info($field);
+          $field = content_fields('field_num_users', 'drupal');
+          $db_users = content_database_info($field);
+
+          $query = db_query(sprintf("SELECT last_update.field_last_update_value AS timestamp, user_table.field_num_users_value AS users, content_moodle.field_mdl_num_courses_value AS courses FROM {".$db_update['table']."} last_update LEFT JOIN {".$db_users['table']."} user_table ON last_update.vid=user_table.vid LEFT JOIN {content_type_moodle} content_moodle ON last_update.vid=content_moodle.vid WHERE last_update.nid = %s  ORDER BY last_update.vid",$node->nid));
           while ($object = db_fetch_object($query)) {
             $courses[] = $object->courses;
             $users[] = $object->users;
