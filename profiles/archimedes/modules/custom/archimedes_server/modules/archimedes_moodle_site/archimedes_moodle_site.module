@@ -56,7 +56,7 @@ function archimedes_moodle_site_block($op = 'list', $delta = 0, $edit = array())
             $times[] = (string) strtotime($object->timestamp);
           }
 
-          $canvas = charts_graphs_get_graph('google-charts');
+          $canvas = charts_graphs_get_graph(variable_get('archimedes_ui_graph', 'google-charts'));
           $canvas->title = "Moodle Growth";
           $canvas->type = "line";
           $canvas->width = 600;

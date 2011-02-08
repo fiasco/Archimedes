@@ -54,7 +54,7 @@ function archimedes_drupal_site_block($op = 'list', $delta = 0, $edit = array())
             $times[] = strtotime($object->timestamp);
           }
 
-          $canvas = charts_graphs_get_graph('google-charts');
+          $canvas = charts_graphs_get_graph(variable_get('archimedes_ui_graph', 'google-charts'));
           $canvas->title = "Drupal Growth";
           $canvas->type = "line";
           $canvas->width = 600;

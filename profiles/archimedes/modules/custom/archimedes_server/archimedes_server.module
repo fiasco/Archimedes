@@ -36,6 +36,11 @@ function archimedes_server_menu() {
  * @TODO #7: Show a warning if archimedes_server_check_webkit() fails here.
  */
 function archimedes_server_admin() {
+  $graphs = array();
+  $apis = charts_graphs_apis();
+  foreach ($apis as $api) {
+    $graphs[$api->name] = $api->nice_name;
+  }
   $form = array();
   $form['archimedes_mail'] = array(
     '#type' => 'fieldset',
@@ -76,22 +81,25 @@ function archimedes_server_admin() {
     '#default_value' => variable_get('archimedes_mail_ssl', FALSE),
     '#description' => 'Check this box if the email uses pop3 over SSL',
   );
+  $form['archimedes_ui'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('User Interface'),
+  );
+  $form['archimedes_ui']['archimedes_ui_graph'] = array(
+    '#type' => 'select',
+    '#title' => 'Charts and Graphs Library',
+    '#default_value' => variable_get('archimedes_ui_graph', 'google-charts'),
+    '#description' => 'Select the graphing library to use. Enable more on the modules page.',
+    '#options' => $graphs
+  );
   $form['archimedes_keys'] = array(
     '#type' => 'fieldset',
     '#title' => t('SSL Public Key'),
     '#collapsible' => TRUE,
-    '#collapsed' => FALSE,
+    '#collapsed' => TRUE,
   );
-
- // $form['archimedes_keys']['archimedes_key_private'] = array(
- //   '#type' => 'value',
- //   '#title' => t('Private Key'),
- //   '#value' => t('<pre>!private_key</pre>', array('!private_key' => variable_get('archimedes_key_private', ''))),
- //   '#description' => t('Archimedes Server private key. Keep this secure.'),
- // );
   $form['archimedes_keys']['archimedes_key_public'] = array(
     '#value' => t('<pre>!public_key</pre>', array('!public_key' => variable_get('archimedes_key_public', ''))),
-    //'#description' => t('Archimedes Server public key. Copy this to the admin page for each Archimedes client to send encrypted emails.'),
   );
 
   $form['#validate'][] = 'archimedes_server_form_validate_inbox';
@@ -405,7 +413,7 @@ function archimedes_server_block($op = 'list', $delta = 0, $edit = array()) {
           $size[1] = $node->field_sitesize[0]['value'];
           $size[2] = $node->field_sitedata[0]['value'];
 
-          $canvas = charts_graphs_get_graph('google-charts');
+          $canvas = charts_graphs_get_graph(variable_get('archimedes_ui_graph', 'google-charts'));
 
           $canvas->title = "Storage Overview";
           $canvas->type = "pie";
@@ -486,7 +494,7 @@ function archimedes_server_block($op = 'list', $delta = 0, $edit = array()) {
             } 
           }
           
-          $canvas = charts_graphs_get_graph('google-charts');
+          $canvas = charts_graphs_get_graph(variable_get('archimedes_ui_graph', 'google-charts'));
           
           $canvas->title = "Total Usage";
           $canvas->type = "pie";
@@ -526,7 +534,7 @@ function archimedes_server_block($op = 'list', $delta = 0, $edit = array()) {
             } 
           }
           
-          $canvas = charts_graphs_get_graph('google-charts');
+          $canvas = charts_graphs_get_graph(variable_get('archimedes_ui_graph', 'google-charts'));
           
           $canvas->title = "Usage by Site";
           $canvas->type = "pie";
