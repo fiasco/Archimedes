@@ -18,44 +18,6 @@ function archimedes_server_views_default_views() {
   $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
   $handler = $view->new_display('default', 'Defaults', 'default');
   $handler->override_option('fields', array(
-    'field_cat_env_value' => array(
-      'label' => 'Environment',
-      'alter' => array(
-        'alter_text' => 0,
-        'text' => '',
-        'make_link' => 0,
-        'path' => '',
-        'link_class' => '',
-        'alt' => '',
-        'prefix' => '',
-        'suffix' => '',
-        'target' => '',
-        'help' => '',
-        'trim' => 0,
-        'max_length' => '',
-        'word_boundary' => 1,
-        'ellipsis' => 1,
-        'html' => 0,
-        'strip_tags' => 0,
-      ),
-      'empty' => '',
-      'hide_empty' => 0,
-      'empty_zero' => 0,
-      'link_to_node' => 0,
-      'label_type' => 'widget',
-      'format' => 'default',
-      'multiple' => array(
-        'group' => TRUE,
-        'multiple_number' => '',
-        'multiple_from' => '',
-        'multiple_reversed' => FALSE,
-      ),
-      'exclude' => 0,
-      'id' => 'field_cat_env_value',
-      'table' => 'node_data_field_cat_env',
-      'field' => 'field_cat_env_value',
-      'relationship' => 'none',
-    ),
     'field_mod_version_value' => array(
       'label' => 'Version',
       'alter' => array(
@@ -168,44 +130,6 @@ function archimedes_server_views_default_views() {
       'id' => 'field_sla_nid',
       'table' => 'node_data_field_sla',
       'field' => 'field_sla_nid',
-      'relationship' => 'none',
-    ),
-    'field_deb_value' => array(
-      'label' => 'Debian Package',
-      'alter' => array(
-        'alter_text' => 0,
-        'text' => '',
-        'make_link' => 0,
-        'path' => '',
-        'link_class' => '',
-        'alt' => '',
-        'prefix' => '',
-        'suffix' => '',
-        'target' => '',
-        'help' => '',
-        'trim' => 0,
-        'max_length' => '',
-        'word_boundary' => 1,
-        'ellipsis' => 1,
-        'html' => 0,
-        'strip_tags' => 0,
-      ),
-      'empty' => '',
-      'hide_empty' => 0,
-      'empty_zero' => 0,
-      'link_to_node' => 0,
-      'label_type' => 'widget',
-      'format' => 'default',
-      'multiple' => array(
-        'group' => TRUE,
-        'multiple_number' => '',
-        'multiple_from' => '',
-        'multiple_reversed' => FALSE,
-      ),
-      'exclude' => 0,
-      'id' => 'field_deb_value',
-      'table' => 'node_data_field_deb',
-      'field' => 'field_deb_value',
       'relationship' => 'none',
     ),
     'field_servername_url' => array(
@@ -1044,10 +968,10 @@ function archimedes_server_views_default_views() {
   ));
   $handler->override_option('fields', array(
     'field_mod_version_value' => array(
-      'label' => 'Version',
+      'label' => '',
       'alter' => array(
-        'alter_text' => 0,
-        'text' => '',
+        'alter_text' => 1,
+        'text' => '<h3>Version: [field_mod_version_value]</h3>',
         'make_link' => 0,
         'path' => '',
         'link_class' => '',
@@ -1067,7 +991,7 @@ function archimedes_server_views_default_views() {
       'hide_empty' => 0,
       'empty_zero' => 0,
       'link_to_node' => 0,
-      'label_type' => 'widget',
+      'label_type' => 'none',
       'format' => 'default',
       'multiple' => array(
         'group' => TRUE,
@@ -1075,7 +999,7 @@ function archimedes_server_views_default_views() {
         'multiple_from' => '',
         'multiple_reversed' => FALSE,
       ),
-      'exclude' => 1,
+      'exclude' => 0,
       'id' => 'field_mod_version_value',
       'table' => 'node_data_field_mod_version',
       'field' => 'field_mod_version_value',
@@ -1223,7 +1147,7 @@ function archimedes_server_views_default_views() {
   $handler->override_option('items_per_page', 0);
   $handler->override_option('distinct', 0);
   $handler->override_option('style_options', array(
-    'grouping' => 'field_mod_version_value',
+    'grouping' => '',
   ));
 
   $views[$view->name] = $view;
