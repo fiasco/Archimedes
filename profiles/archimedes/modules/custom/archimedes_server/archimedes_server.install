@@ -25,6 +25,16 @@ function archimedes_server_install() {
     variable_set('archimedes_server_key', $pubkey['key']);
   }
 
+  // Create System user
+  $user_data = array(
+    'mail' => variable_get('site_mail', ini_get('sendmail_from')),
+    'name' => 'Archimedes',
+    'init' => variable_get('site_mail', ini_get('sendmail_from')),
+    'status' => 1,
+  );
+  $user = user_save((object) $user_data);
+  variable_set('archimedes_server_system_uid', $user->uid);
+
 } // archimedes_server_install()
 
 /**
