@@ -52,10 +52,42 @@ function archimedes_server_requirements($phase) {
     // Required library wasn't found. Show a warning.
     $requirements['archimedes_server']['title'] = $t('Archimedes Server Webkit');
     $requirements['archimedes_server']['value'] = $t('Not found');
-    $requirements['archimedes_server']['description'] = $t('The Python Webkit2png plugin is missing. Screenshots of your sites will not be taken. <a href="@download">Download</a> and extract it to a folder called "python-webkit2png" in your <em>archimedes_server</em> module directory.', array(
-      '@download' => 'https://github.com/AdamN/python-webkit2png/tarball/master',
+    $requirements['archimedes_server']['description'] = $t('
+      The Python Webkit2png plugin is missing. Screenshots of your sites will not be taken. 
+      <a href="@download">Download</a> and extract it to a folder called "python-webkit2png" 
+      in <strong>@dir</strong>.', array(
+       '@download' => 'https://github.com/AdamN/python-webkit2png/tarball/master',
+      '@dir' => dirname(__FILE__),
     ));
     $requirements['archimedes_server']['severity'] = REQUIREMENT_WARNING;
+  }
+
+  // Archimedes requires imap to check the mail inbox.
+  if (!function_exists('imap_open')) {
+    $requirements['archimedes_mail'] = array(
+      'title' => $t('PHP5 IMAP'),
+      'value' => $t('Not installed'),
+      'description' => $t("php5-imap is not configured with the existing PHP install. Archimedes requires
+ this to check for updates from archimedes clients."), 
+      'severity' => REQUIREMENT_ERROR,
+    );
+  }
+
+  // Get a list of modules that exist in Drupal's assorted subdirectories.
+  $present_modules = array();
+  foreach (drupal_system_listing('\.module$', 'modules', 'name', 0) as $present_module) {
+    $present_modules[] = $present_module->name;
+  }
+
+  // Check the archimedes server has the archimedes client installed on it.
+  if (!in_array('archimedes', $present_modules)) {
+    $requirements['archimedes_client'] = array(
+      'title' => $t('Archimedes Client'),
+      'value' => $t('Not installed'),
+      'description' => $t("Archimedes Client is not installed yet. Please <a href='@url'>download</a> the latest Drupal 6 
+archimedes client from github.", array('@url' => 'https://github.com/fiasco/Archimedes-Client-Drupal/tree/drupal-6')),
+      'severity' => REQUIREMENT_ERROR,
+    );
   }
 
   return $requirements;
