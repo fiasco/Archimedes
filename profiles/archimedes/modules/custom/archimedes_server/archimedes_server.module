@@ -581,7 +581,8 @@ function archimedes_server_block($op = 'list', $delta = 0, $edit = array()) {
 function archimedes_server_nodeapi(&$node, $op, $teaser, $page) {
   switch ($op) {
     case 'insert':
-      if (is_numeric($snid = $_GET['snid'])) {
+      // Reference new SLA from reffering site node
+      if ($node->type == 'sla' && is_numeric($snid = $_GET['snid'])) {
         $snode = node_load($snid);
         $snode->field_sla[0]['nid'] = $node->nid;
         node_save($snode);
