@@ -36,7 +36,6 @@ function archimedes_activity_stream_add($site_nid, $title, $body, $author_uid, $
  * Implementation of hook_archimedes_site_alter().
  */
 function archimedes_activity_stream_archimedes_site_alter(&$node, $op) {
-  var_dump($node);
   if ($op == 'post') {
     archimedes_activity_stream_add($node->nid, t('!title sent a new report', array('!title' => $node->title)), '', $node->uid, $node->revision_timestamp, array('Report'));
   }
