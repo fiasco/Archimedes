@@ -574,6 +574,22 @@ function archimedes_server_block($op = 'list', $delta = 0, $edit = array()) {
 
 } // function archimedes_server_block
 
+
+/**
+* Implementation of hook_nodeapi().
+*/
+function archimedes_server_nodeapi(&$node, $op, $teaser, $page) {
+  switch ($op) {
+    case 'insert':
+      if (is_numeric($snid = $_GET['snid'])) {
+        $snode = node_load($snid);
+        $snode->field_sla[0]['nid'] = $node->nid;
+        node_save($snode);
+      }
+  }
+}
+
+
 function archimedes_server_format_bytes($size) {
     $units = array(' B', ' KB', ' MB', ' GB', ' TB');
     for ($i = 0; $size >= 1024 && $i < 4; $i++) $size /= 1024;
