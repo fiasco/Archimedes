@@ -1,0 +1,146 @@
+<?php
+/**
+ * Implementation of hook_menu().
+ */
+function admin_tools_menu() {
+  $items['admin/flush-cache/%'] = array(
+    'title' => t('Clear Cache'),
+    'page callback' => 'admin_tools_flush_cache',
+    'access arguments' => array('administer site configuration'),
+    'page arguments' => array(2),
+    'type' => MENU_CALLBACK,
+  );
+  return $items;
+}
+
+/**
+ * Flush all caches or a specific one.
+ *
+ * @param $name
+ *   (optional) Name of cache to flush.
+ */
+function admin_tools_flush_cache($name = NULL) {
+  switch ($name) {
+    case 'menu':
+    	if(module_exists('views')) {
+        views_invalidate_cache();
+    	}
+      menu_rebuild();
+      drupal_set_message('Menu Cache Cleared');
+      break;
+
+    case 'cache':
+      // Don't clear cache_form - in-progress form submissions may break.
+      // Ordered so clearing the page cache will always be the last action.
+      $core = array('cache', 'cache_block', 'cache_filter', 'cache_page');
+      $cache_tables = array_merge(module_invoke_all('flush_caches'), $core);
+      foreach ($cache_tables as $table) {
+        cache_clear_all('*', $table, TRUE);
+      }
+      drupal_set_message('Cache Tables Cleared');
+      break;
+
+    case 'requisites':
+      // Change query-strings on css/js files to enforce reload for all users.
+      _drupal_flush_css_js();
+      drupal_clear_css_cache();
+      drupal_clear_js_cache();
+      drupal_set_message('CSS/JS Cache Cleared');
+      break;
+
+    case 'theme':
+      module_invoke('system', 'theme_data');
+      drupal_rebuild_theme_registry();
+      drupal_set_message('Theme Registry Rebuilt');
+      break;
+    case 'views':
+    	views_flush_caches();
+    	drupal_set_message('Views Cache Cleared');
+    	break;
+    default:
+      // Flush all caches; no need to re-implement this.
+      module_load_include('inc', 'system', 'system.admin');
+      $form = $form_state = array();
+      system_clear_cache_submit($form, $form_state);
+      break;
+  }
+  drupal_goto();
+}
+function admin_tools_block($op = 'list', $delta = 0, $edit = array()) {
+  if ($op == 'list') {
+    $blocks['clearcache'] = array(
+      'info' => t('Admin Tools'),
+      'weight' => 0, 
+      'status' => 1, 
+      'admin' => TRUE,
+    );
+
+    return $blocks;
+  }
+  else if ($op == 'configure' && $delta == 'clearcache') {
+    
+    return $form;
+  }
+  else if ($op == 'save' && $delta == 'clearcache') {
+    
+  }
+  
+  else if ($op == 'view') {
+    switch($delta) {
+      case 'clearcache':
+        $block = array('subject' => t('Admin Tools'),
+          'content' => admin_tools_admin_content());
+        break;
+    }
+    return $block;
+  }
+}
+/**
+ * Function to build out content for the block that will be used in the administrative toolbar area
+ */
+function admin_tools_admin_content () {
+  $destination = drupal_get_destination();
+  $links = array(
+    'all' => array( 
+      'title' => 'Clear All Caches', 
+      'href' => 'admin/flush-cache/all',
+      'query' => $destination,
+    ),
+    'views' => array( 
+      'title' => 'Views Cache', 
+      'href' => 'admin/flush-cache/views',
+      'query' => $destination,
+    ),
+    'menu' => array( 
+      'title' => 'Menu Cache', 
+      'href' => 'admin/flush-cache/menu',
+      'query' => $destination,
+    ),
+    'theme' => array( 
+      'title' => 'Theme Registry', 
+      'href' => 'admin/flush-cache/theme',
+      'query' => $destination,
+    ),
+    'requisites' => array( 
+      'title' => 'CSS/JS Cache', 
+      'href' => 'admin/flush-cache/requisites',
+      'query' => $destination,
+    ),
+    'tables' => array( 
+      'title' => 'Cache Tables', 
+      'href' => 'admin/flush-cache/cache',
+      'query' => $destination,
+    ),
+    'cron' => array( 
+      'title' => 'Run Cron', 
+      'href' => 'admin/reports/status/run-cron',
+      'query' => $destination,
+    ),
+    'update' => array( 
+      'title' => 'Run Updates', 
+      'href' => 'update.php',
+    ),
+  );
+  $content = theme('links', $links, array('class' => 'menu'));
+  return $content;
+}
