@@ -145,6 +145,8 @@ function archimedes_moodle_site_content_default_fields() {
     'allowed_values' => '',
     'allowed_values_php' => '',
     'widget' => array(
+      'rows' => 5,
+      'size' => '60',
       'default_value' => array(
         '0' => array(
           'value' => '',
@@ -152,8 +154,6 @@ function archimedes_moodle_site_content_default_fields() {
         ),
       ),
       'default_value_php' => NULL,
-      'rows' => 5,
-      'size' => '60',
       'label' => 'Database Name',
       'weight' => '74',
       'description' => '',
@@ -874,6 +874,8 @@ function archimedes_moodle_site_content_default_fields() {
     'allowed_values' => '',
     'allowed_values_php' => '',
     'widget' => array(
+      'rows' => 5,
+      'size' => '16',
       'default_value' => array(
         '0' => array(
           'value' => '',
@@ -881,8 +883,6 @@ function archimedes_moodle_site_content_default_fields() {
         ),
       ),
       'default_value_php' => NULL,
-      'rows' => 5,
-      'size' => '16',
       'label' => 'Version',
       'weight' => '32',
       'description' => '',
