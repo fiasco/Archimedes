@@ -154,7 +154,7 @@ function archimedes_server_get_xml(){
     foreach($struct->parts as $section) {
       $sect = imap_fetchbody($mbox,$i,$id);
 
-      // Decode meaasge if encoded
+      // Decode message if encoded
       if ($section->encoding == 3)     // 3 = BASE64
         $sect = base64_decode($sect);
       elseif ($section->encoding == 4) // 4 = QUOTED-PRINTABLE
@@ -179,6 +179,16 @@ function archimedes_server_get_xml(){
       openssl_open($xml,$uncrypt,$ekey, $prikey);
       openssl_free_key($prikey);
       $xml = $uncrypt;
+      if (!isset($xml)) {
+        $header = imap_headerinfo($mbox,$i);
+        watchdog("Archimedes","An encryted update was recieved from %from, but Archimedes Server was unable to decrypt it. It is likely the saved public key is incorrect.", array("%from" => $header->fromaddress), WATCHDOG_ERROR);
+        continue;
+      }
+    }
+    if (empty($xml)) {
+      $header = imap_headerinfo($mbox,$i);
+      watchdog("Archimedes","An update was recieved from %from, but Archimedes Server was unable to read it.", array("%from" => $header->fromaddress), WATCHDOG_ERROR);
+      continue;
     }
     $data[] = $xml;
   }
