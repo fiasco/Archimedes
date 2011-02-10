@@ -355,6 +355,71 @@ function archimedes_server_clear_inbox() {
   }
 }
 
+/**
+  * Hook into the archimedes_site hook (for drupal_alter in update function)
+  *
+  * Check whether the directory hashes have changed and notify roles if they have
+  * @author Adam Bramley
+  */
+function archimedes_server_archimedes_site_alter($node){
+  $roles = variable_get('archimedes_notifications', array());
+  $hash_roles = $roles['archimedes_directory_hash_roles'];
+  $revisions = node_revision_list($node);
+  //take the 2nd element in the array
+  next($revisions);
+  if ($key = key($revisions))  {
+    $previous_node = node_load($node->nid, $key);
+  }
+  else  {
+    //no previous revision to compare to so just return
+    return;
+  }
+
+  $current_hash = $node->field_directory_hash[0]['value'];
+  $previous_hash = $previous_node->field_directory_hash[0]['value'];
+  if ($current_hash != $previous_hash) {
+    $users = $node->field_users;
+    $emails = archimedes_server_get_role_emails($users, $hash_roles);
+    if (!empty($emails))  {
+      $from = variable_get('archimedes_server_email','archimedes@catalyst.net.nz');
+      $message = array(
+        'to' => implode(', ', $emails),
+        'subject' => t("Directory hash warning ($node->title)"),
+        'body' => "<h4>Security Warning</h4>A change in the md5 hashing of the site data for $node->title has been detected. This could potentially be a malicious attack, please check with site maintainers to see if there's been a recent update.",
+        'headers' => array(
+          'MIME-Version' => '1.0',
+          'Content-Type' => 'text/html; charset=UTF-8; format=flowed',
+          'Content-Transfer-Encoding' => '8Bit',
+          'X-Mailer' => 'Drupal',
+          'From' => $from
+        ),
+      );
+      if (module_exists('messaging')) {
+        $send = messaging_message_send($emails, $message, variable_get('messaging_default_method', 'mail'));
+      }
+      else{
+        $send = drupal_mail_send($message);
+      }
+    }
+  }
+}
+
+function archimedes_server_get_role_emails($users, $roles)  {
+  $emails = array();
+  foreach ($users as $current)  {
+    $user = user_load($current['uid']);
+    $user_roles = $user->roles;
+    while ($role = current($user_roles)) {
+      if (in_array(key($user_roles), $roles) && !in_array($user->mail, $emails))  {
+        //a role for the user is in the roles set to be notified
+       $emails[] = $user->mail;
+      }
+      next($user_roles);
+    }
+  }
+  return $emails;
+}
+
 function archimedes_server_check_webkit(){
   return is_dir(dirname(__FILE__) . '/python-webkit2png');
 }
