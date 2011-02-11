@@ -245,6 +245,41 @@ function archimedes_drupal_site_check_modules($node){
 }
 
 /**
+  * Implementation of hook_taxonomy()
+  *
+  * Adds terms into the Drupal Major Version vocabulary when
+  * the feature creates it.
+  */
+function archimedes_drupal_site_taxonomy($op, $type) {
+  if ($type == 'vocabulary' && $op == 'insert') {
+    $vocabularies = taxonomy_get_vocabularies();
+    if (!empty($vocabularies))  {
+      $terms = array('5.x', '6.x', '7.x');
+      $major_vid = 0;
+      foreach ($vocabularies as $vocabulary) {
+        if ($vocabulary->name == 'Drupal Major Version') {
+          $major_vid = $vocabulary->vid;
+          break;
+        }
+      }
+      if ($major_vid != 0) {
+        foreach ($terms as $term) {
+          $tid = taxonomy_get_term_by_name($term);
+          if (empty($tid)) {
+            $term = array(
+              'vid' => $major_vid,
+              'name' => $term,
+            );
+            taxonomy_save_term($term);
+          }
+        }
+      }
+    }
+  }
+}
+
+
+/**
  * Implementation of archimedes_site_alter
  */
 function archimedes_drupal_site_archimedes_site_alter(&$node, $op) {
