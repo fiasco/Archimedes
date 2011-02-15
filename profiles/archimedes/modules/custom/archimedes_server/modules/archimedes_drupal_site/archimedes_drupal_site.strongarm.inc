@@ -199,14 +199,14 @@ function archimedes_drupal_site_strongarm() {
   $strongarm->api_version = 1;
   $strongarm->name = 'content_extra_weights_drupal';
   $strongarm->value = array(
-    'title' => '23',
-    'body_field' => '28',
-    'revision_information' => '30',
-    'author' => '29',
-    'options' => '31',
-    'comment_settings' => '32',
-    'menu' => '27',
-    'path' => '30',
+    'title' => '2',
+    'body_field' => '5',
+    'revision_information' => '8',
+    'author' => '6',
+    'options' => '9',
+    'comment_settings' => '10',
+    'menu' => '4',
+    'path' => '7',
   );
 
   $export['content_extra_weights_drupal'] = $strongarm;

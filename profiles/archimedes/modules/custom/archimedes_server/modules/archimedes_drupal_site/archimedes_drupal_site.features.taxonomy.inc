@@ -10,7 +10,7 @@ function archimedes_drupal_site_taxonomy_default_vocabularies() {
       'description' => '',
       'help' => '',
       'relations' => '1',
-      'hierarchy' => '1',
+      'hierarchy' => '0',
       'multiple' => '0',
       'required' => '1',
       'tags' => '0',
