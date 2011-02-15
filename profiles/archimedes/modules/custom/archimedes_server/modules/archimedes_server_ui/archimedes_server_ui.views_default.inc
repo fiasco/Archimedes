@@ -435,6 +435,44 @@ function archimedes_server_ui_views_default_views() {
         'button' => 'Override',
       ),
     ),
+    'field_site_env_value' => array(
+      'label' => '',
+      'alter' => array(
+        'alter_text' => 0,
+        'text' => '',
+        'make_link' => 0,
+        'path' => '',
+        'link_class' => '',
+        'alt' => '',
+        'prefix' => '',
+        'suffix' => '',
+        'target' => '',
+        'help' => '',
+        'trim' => 0,
+        'max_length' => '',
+        'word_boundary' => 1,
+        'ellipsis' => 1,
+        'html' => 0,
+        'strip_tags' => 0,
+      ),
+      'empty' => '',
+      'hide_empty' => 1,
+      'empty_zero' => 0,
+      'link_to_node' => 0,
+      'label_type' => 'none',
+      'format' => 'default',
+      'multiple' => array(
+        'group' => TRUE,
+        'multiple_number' => '',
+        'multiple_from' => '',
+        'multiple_reversed' => FALSE,
+      ),
+      'exclude' => 0,
+      'id' => 'field_site_env_value',
+      'table' => 'node_data_field_site_env',
+      'field' => 'field_site_env_value',
+      'relationship' => 'none',
+    ),
     'field_last_update_value' => array(
       'label' => 'Updated',
       'alter' => array(
@@ -595,6 +633,14 @@ function archimedes_server_ui_views_default_views() {
   $handler->override_option('use_pager', 'mini');
   $handler->override_option('style_options', array(
     'grouping' => '',
+  ));
+  $handler->override_option('row_options', array(
+    'inline' => array(
+      'title' => 'title',
+      'field_site_env_value' => 'field_site_env_value',
+    ),
+    'separator' => '',
+    'hide_empty' => 0,
   ));
   $handler = $view->new_display('page', 'Page', 'page_1');
   $handler->override_option('empty', 'Looks like Archimedes hasn\'t received any reports from any sites yet. Check the status report page to ensure Archimedes is running like it should be.');
