@@ -2,6 +2,8 @@
 
 include_once('archimedes_drupal_site.features.inc');
 
+define('DRUPAL_SITE_MODULE_VID', db_result(db_query("SELECT vid FROM {vocabulary} WHERE module = '%s'", 'features_drupal_major_version')));
+
 /**
   * Implementation of hook_cron().
   */
@@ -250,22 +252,27 @@ function archimedes_drupal_site_check_modules($node){
 function archimedes_drupal_site_archimedes_site_alter(&$node, $op) {
 
   if ($op == 'pre' && $version = $node->field_drupal_version[0]['value']) {
-    $tid = '';
-    switch (substr($version,0,1)) {
-      case '5':
-        $tid = taxonomy_get_term_by_name('5.x');
+    $terms = taxonomy_get_term_by_name(substr($version,0,1) . '.x');
+    $term_exists = FALSE;
+    foreach ($terms as $term) {
+      if ($term->vid == DRUPAL_SITE_MODULE_VID) {
+        $term_exists = TRUE;
+        $terms = array($term);
         break;
-      case '6':
-        $tid = taxonomy_get_term_by_name('6.x');
-        break;
-      case '7':
-        $tid = taxonomy_get_term_by_name('7.x');
-        break;
+      }
     }
-    // must save node first before adding taxonomy
+    if (!$term_exists) {
+      // Create term here.
+      $term = array(
+        'vid' => DRUPAL_SITE_MODULE_VID,
+        'name' => $term,
+      );
+      taxonomy_save_term($term);
+      $terms = array($term);
+    }
     node_save($node);
 
-    taxonomy_node_save($node,$tid);
+    taxonomy_node_save($node,$terms);
   }
   archimedes_drupal_site_check_modules($node);
 }
