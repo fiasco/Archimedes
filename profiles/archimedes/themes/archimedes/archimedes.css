@@ -117,6 +117,7 @@
 }
 
 .field-field-thumbnail img {
+  margin-top: 5px;
   -moz-box-shadow: 2px 2px 3px #666;
   -webkit-box-shadow: 2px 2px 3px #666;
   box-shadow: 2px 2px 3px #666;
@@ -133,5 +134,4 @@
 #tabs-tabs {
   min-height: 330px;
 }
-
 
