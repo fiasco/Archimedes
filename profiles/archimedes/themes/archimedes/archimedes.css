@@ -25,6 +25,8 @@
   -moz-border-radius: 2px;
   -webkit-border-radius: 2px;
   border: 1px solid #086782;
+  /*min height needed if picture isn't generated*/
+  min-height: 97px;
 }
 
 .view-subscribed-sites .views-field-nothing {
