@@ -1,5 +1,0 @@
-; $Id: INSTALL.TXT,v 1.1.2.2 2010/08/03 09:43:17 rsevero Exp $
-
-Since version 3.6.1 Bluff is dual licensed - MIT and GPL - so it can be
-distributed together with Charts and Graphs code, i.e., you don't have to do
-anything  else, it's ready to use.

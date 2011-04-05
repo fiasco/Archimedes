@@ -1,8 +1,0 @@
-<?php
-
-include_once('archimedes_server_ui.features.inc');
-
-function archimedes_server_ui_menu_alter(&$items) {
-  // change "View" tab to "General" when multiple tabs visible
-  $items['node/%node/view']['title'] = t('General');
-}
